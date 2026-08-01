@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Duke">
+  <path fill="#fff" stroke="#202124" stroke-linejoin="round" stroke-width="3" d="M32 4 49 50c1.5 4-1.5 8-5.8 8H20.8c-4.3 0-7.3-4-5.8-8L32 4Z"/>
+  <path fill="#202124" d="m22.4 25.6-8.8 5.5 2.6 4.2 9.4-5.9-3.2-3.8Zm19.2 0-3.2 3.8 9.4 5.9 2.6-4.2-8.8-5.5Z"/>
+  <path fill="#202124" d="M26.5 16.8 32 4l5.5 12.8a19.2 19.2 0 0 0-11 0Z"/>
+  <circle cx="32" cy="25" r="7" fill="#e53935" stroke="#202124" stroke-width="2"/>
+  <circle cx="34.2" cy="22.8" r="1.8" fill="#fff"/>
+  <path fill="none" stroke="#202124" stroke-linecap="round" stroke-width="3" d="m24 56-3.5 4M40 56l3.5 4"/>
+</svg>

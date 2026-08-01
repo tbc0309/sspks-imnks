@@ -1,0 +1,31 @@
+{
+    "name": "imnks/sspks-imnks",
+    "description": "SSPKS-IMNKS multilingual package repository for Synology DSM 7",
+    "license": "GPL-3.0-only",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "ext-json": "*",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-pdo_sqlite": "*",
+        "ext-phar": "*",
+        "mustache/mustache": "^2.14.2",
+        "symfony/yaml": "5.4.*",
+        "topthink/think-cache": "^2.0.7",
+        "topthink/think-orm": "^2.0.52"
+    },
+    "autoload": {
+        "psr-4": {
+            "SSpkS\\": "lib/SSpkS/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "7.4.33"
+        },
+        "preferred-install": "dist",
+        "sort-packages": true
+    }
+}

@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Replace packages.example.com with your public repository domain before deployment.
+Sitemap: https://packages.example.com/sitemap.xml

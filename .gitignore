@@ -1,0 +1,12 @@
+/cache/*
+!/cache/.gitkeep
+/runtime/*
+!/runtime/.gitkeep
+/packages/*.spk
+/.codex-tmp/
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.log
+/.env

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="{{ htmlLang }}" data-default-palette="{{ defaultPalette }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="description" content="{{ seoDescription }}">
+        <meta name="keywords" content="{{ seoKeywords }}">
+        <meta name="author" content="SSPkS Community">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="theme-color" content="#0b3b46">
+{{# noIndex }}
+        <meta name="robots" content="noindex, nofollow, noarchive">
+{{/ noIndex }}
+{{^ noIndex }}
+        <meta name="robots" content="index, follow, max-image-preview:large">
+{{/ noIndex }}
+        <meta property="og:type" content="website">
+        <meta property="og:locale" content="{{ ogLocale }}">
+        <meta property="og:site_name" content="{{ siteName }}">
+        <meta property="og:title" content="{{ pageTitle }}">
+        <meta property="og:description" content="{{ seoDescription }}">
+        <meta property="og:url" content="{{ canonicalUrl }}">
+        <meta property="og:image" content="{{ socialImageUrl }}">
+        <meta property="og:image:alt" content="{{ siteName }}">
+        <meta name="twitter:card" content="summary">
+        <link rel="canonical" href="{{ canonicalUrl }}">
+        <title>{{ pageTitle }}</title>
+{{# websiteStructuredData }}
+        <script type="application/ld+json">{{{ websiteStructuredData }}}</script>
+{{/ websiteStructuredData }}
+        <script>
+            (function () {
+                var allowed = ['teal', 'ocean', 'violet', 'dark'];
+                var saved = '';
+                try {
+                    saved = localStorage.getItem('sspks-palette') || '';
+                } catch (error) {
+                    saved = '';
+                }
+                document.documentElement.dataset.palette = allowed.indexOf(saved) >= 0 ? saved : '{{ defaultPalette }}';
+            }());
+        </script>
+        <link rel="stylesheet" href="{{ themeUrl }}css/style.css?v={{ styleVersion }}">
+        <link rel="icon" href="{{ baseUrlRelative }}favicon.ico" type="image/x-icon" sizes="48x48">
+        <script src="{{ themeUrl }}js/script.js?v={{ scriptVersion }}" defer></script>
+        <script>window.SSPKS_I18N = {{{ i18nJson }}};</script>
+    </head>
+    <body>
+        <div class="mdl-layout">
+            <header class="site-header mdl-layout__header">
+                <div class="mdl-layout__header-row">
+                    <a class="site-brand" href="{{ baseUrlRelative }}" aria-label="{{ siteName }}">
+                        <img src="{{ baseUrlRelative }}logo.png" alt="{{ siteName }}" width="152" height="50" decoding="async" fetchpriority="high">
+                    </a>
+                    {{# headerStatistics }}
+                    <span class="collection-stats">{{ headerStatisticsText }}</span>
+                    {{/ headerStatistics }}
+                    <div class="mdl-layout-spacer"></div>
+                    <div class="header-actions">
+                        <div class="palette-switcher" aria-label="Theme" role="group">
+                            <button type="button" class="palette-swatch palette-swatch--teal" data-palette="teal" aria-label="Teal"></button>
+                            <button type="button" class="palette-swatch palette-swatch--ocean" data-palette="ocean" aria-label="Ocean"></button>
+                            <button type="button" class="palette-swatch palette-swatch--violet" data-palette="violet" aria-label="Violet"></button>
+                            <button type="button" class="palette-swatch palette-swatch--dark" data-palette="dark" aria-label="Dark"></button>
+                        </div>
+{{# showLanguageSelector }}
+                        <div class="language-select" data-language-menu>
+                            <button class="language-select__button" type="button" aria-label="{{ language }}" aria-expanded="false" aria-controls="language-menu" data-language-button>
+                                <svg class="language-select__icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="9"></circle>
+                                    <path d="M3 12h18M12 3c2.5 2.5 3.8 5.5 3.8 9S14.5 18.5 12 21M12 3C9.5 5.5 8.2 8.5 8.2 12S9.5 18.5 12 21"></path>
+                                </svg>
+                            </button>
+                            <div class="language-select__menu" id="language-menu" hidden data-language-list>
+{{# languageOptions }}
+                                <a href="{{ url }}"{{# selected }} class="is-selected" aria-current="true"{{/ selected }}>{{ name }}</a>
+{{/ languageOptions }}
+                            </div>
+                        </div>
+{{/ showLanguageSelector }}
+                        <nav class="site-nav" aria-label="Navigation">
+                            <a href="{{ baseUrlRelative }}?packages=fulllist">{{ nav_all_packages }}</a>
+                        </nav>
+                    </div>
+                </div>
+            </header>
+            <main class="mdl-layout__content">
+{{^ hideSetupInfo }}
+{{^ arch }}
+                <div class="setup-info" id="setup-info" role="note">
+                    <div class="setup-info__inner">
+                        <span class="setup-info__label">{{ source_label }}</span>
+                        <code id="source-url">{{ baseUrl }}</code>
+                        <p>{{ source_help }}</p>
+                    </div>
+                    <button class="mdl-button mdl-button--raised" type="button" data-copy-source>{{ copy_address }}</button>
+                </div>
+{{/ arch }}
+{{/ hideSetupInfo }}
+                <div class="page-content">
