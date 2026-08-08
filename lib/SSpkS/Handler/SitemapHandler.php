@@ -55,7 +55,7 @@ final class SitemapHandler extends AbstractHandler
             header('Cache-Control: no-store');
             header('X-Content-Type-Options: nosniff');
             if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'HEAD') {
-                echo '站点地图暂时不可用。';
+                echo 'The sitemap is temporarily unavailable.';
             }
         }
     }

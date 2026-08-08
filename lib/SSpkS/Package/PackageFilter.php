@@ -45,7 +45,7 @@ final class PackageFilter
     public function setChannelFilter(string $channel): void
     {
         if (!in_array($channel, ['stable', 'beta'], true)) {
-            throw new \InvalidArgumentException('不支持的套件通道');
+            throw new \InvalidArgumentException('Unsupported package channel');
         }
         $this->filterChannel = $channel;
     }
@@ -164,7 +164,7 @@ final class PackageFilter
     {
         $package = @unserialize($serialized, ['allowed_classes' => [Package::class]]);
         if (!$package instanceof Package) {
-            throw new \UnexpectedValueException('序列化套件元数据无效');
+            throw new \UnexpectedValueException('Invalid serialized package metadata');
         }
         return $package;
     }

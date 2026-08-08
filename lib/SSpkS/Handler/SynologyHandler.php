@@ -71,7 +71,7 @@ final class SynologyHandler extends AbstractHandler
         $language = strtolower($language);
         try {
             if (!(new DeviceList($this->config))->isKnownArchitecture($arch)) {
-                throw new \InvalidArgumentException('未知的套件架构');
+                throw new \InvalidArgumentException('Unknown package architecture');
             }
         } catch (\Throwable $e) {
             $this->invalidRequest();
@@ -158,7 +158,7 @@ final class SynologyHandler extends AbstractHandler
         header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: no-store');
         header('X-Content-Type-Options: nosniff');
-        echo json_encode(['error' => '套件中心请求无效'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Invalid Package Center request'], JSON_UNESCAPED_UNICODE);
     }
 
     private function queryString(string $name, string $default = ''): ?string

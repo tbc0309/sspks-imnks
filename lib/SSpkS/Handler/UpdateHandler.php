@@ -91,7 +91,7 @@ final class UpdateHandler extends AbstractHandler
 
         $lockDir = $this->config->basePath . DIRECTORY_SEPARATOR . 'runtime';
         if (!is_dir($lockDir) && !mkdir($lockDir, 0770, true)) {
-            $this->emit(['type' => 'error', 'message' => '无法创建更新锁目录。']);
+            $this->emit(['type' => 'error', 'message' => 'Unable to create the update lock directory.']);
             return;
         }
         $lockFile = $lockDir . DIRECTORY_SEPARATOR . 'package-refresh.lock';
@@ -100,7 +100,7 @@ final class UpdateHandler extends AbstractHandler
             if (is_resource($lockHandle)) {
                 fclose($lockHandle);
             }
-            $this->emit(['type' => 'error', 'message' => '已有更新任务正在运行，请稍后再试。']);
+            $this->emit(['type' => 'error', 'message' => 'An update is already running. Please try again later.']);
             return;
         }
 
@@ -122,8 +122,8 @@ final class UpdateHandler extends AbstractHandler
                     'success' => $result['success'],
                     'failed' => $result['failed'],
                     'message' => $thumbnailWarning === ''
-                        ? '套件索引更新完成。'
-                        : '套件索引更新完成，但网页缩略图生成失败：' . $thumbnailWarning,
+                        ? 'Package index update completed.'
+                        : 'Package index update completed, but browser thumbnail generation failed: ' . $thumbnailWarning,
                 ]);
             } catch (\Throwable $e) {
                 error_log('[SSpkS] Package index refresh failed: ' . $e->getMessage());
@@ -131,8 +131,8 @@ final class UpdateHandler extends AbstractHandler
                 $this->emit([
                     'type' => 'error',
                     'message' => $detail === ''
-                        ? '更新失败，现有索引已保留。'
-                        : '更新失败：' . $detail . '（现有索引已保留）',
+                        ? 'Update failed; the existing index was preserved.'
+                        : 'Update failed: ' . $detail . ' (the existing index was preserved)',
                 ]);
             }
         } finally {
@@ -152,15 +152,15 @@ final class UpdateHandler extends AbstractHandler
             $this->emit([
                 'type' => 'progress',
                 'percent' => 98,
-                'message' => '正在重新生成网页 WebP 缩略图…',
+                'message' => 'Regenerating browser WebP thumbnails…',
             ]);
             $catalog = new BrowserPackageCatalog($this->config);
             $packages = $catalog->getAll(true);
             if ($packages !== [] && $images->countPublishedImages() === 0) {
-                throw new \RuntimeException('服务器缺少 GD/Imagick WebP 支持或 cache 目录不可写');
+                throw new \RuntimeException('The server lacks GD/Imagick WebP support or the cache directory is not writable');
             }
             if ($catalog->getImageFailureCount() > 0) {
-                throw new \RuntimeException('有 ' . $catalog->getImageFailureCount() . ' 个网页缩略图未能生成，请检查 PHP 错误日志');
+                throw new \RuntimeException($catalog->getImageFailureCount() . ' browser thumbnails could not be generated; check the PHP error log');
             }
             return '';
         } catch (\Throwable $e) {
@@ -172,7 +172,7 @@ final class UpdateHandler extends AbstractHandler
     private function emit(array $event): void
     {
         $json = json_encode($event, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
-        echo ($json === false ? '{"type":"error","message":"无法编码更新状态。"}' : $json) . "\n";
+        echo ($json === false ? '{"type":"error","message":"Unable to encode update status."}' : $json) . "\n";
         @ob_flush();
         flush();
     }
@@ -181,7 +181,7 @@ final class UpdateHandler extends AbstractHandler
     {
         usleep(250000);
         http_response_code(404);
-        $this->emit(['type' => 'error', 'message' => '管理密码无效或尚未配置。']);
+        $this->emit(['type' => 'error', 'message' => 'The management password is invalid or not configured.']);
     }
 
     private function updateAuthFailures(string $action): int
@@ -288,8 +288,8 @@ final class UpdateHandler extends AbstractHandler
             'total' => $total,
             'totalBytes' => $totalBytes,
             'message' => $total > 0
-                ? ($checkpointEntries === [] ? '开始检查套件文件…' : '已载入上次更新检查点，正在继续扫描…')
-                : '没有找到 SPK 文件。',
+                ? ($checkpointEntries === [] ? 'Starting package file scan…' : 'Previous update checkpoint loaded; resuming scan…')
+                : 'No SPK files found.',
         ]);
 
         foreach ($files as $index => $file) {
@@ -306,14 +306,14 @@ final class UpdateHandler extends AbstractHandler
                     $emit([
                         'type' => 'success',
                         'name' => $label,
-                        'detail' => (string) $row['displayname'] . ' · ' . (string) $row['version'] . '（检查点）',
+                        'detail' => (string) $row['displayname'] . ' · ' . (string) $row['version'] . ' (checkpoint)',
                     ]);
                     $emit([
                         'type' => 'progress',
                         'percent' => $this->scanPercent($processedBytes, $totalBytes),
                         'processed' => $index + 1,
                         'total' => $total,
-                        'message' => '复用检查点：' . $label,
+                        'message' => 'Reusing checkpoint: ' . $label,
                     ]);
                     continue;
                 }
@@ -324,13 +324,13 @@ final class UpdateHandler extends AbstractHandler
                 $pkg = new Package($this->config, $file);
                 $filePath = $this->config->basePath . DIRECTORY_SEPARATOR . $pkg->spk;
                 if (!is_file($filePath)) {
-                    throw new \RuntimeException('文件不存在或不可读取');
+                    throw new \RuntimeException('File does not exist or is not readable');
                 }
 
                 $filemtime = filemtime($filePath);
                 $filesize = filesize($filePath);
                 if ($filemtime === false || $filesize === false) {
-                    throw new \RuntimeException('无法读取文件属性');
+                    throw new \RuntimeException('Unable to read file attributes');
                 }
 
                 $cached = $existingPackages[$pkg->spk] ?? null;
@@ -345,7 +345,7 @@ final class UpdateHandler extends AbstractHandler
                         'percent' => $this->scanPercent($processedBytes + $fileWeights[$file], $totalBytes),
                         'processed' => $index,
                         'total' => $total,
-                        'message' => '复用校验值：' . $label,
+                        'message' => 'Reusing checksum: ' . $label,
                     ]);
                 } else {
                     $md5 = $this->hashFileInChunks(
@@ -360,11 +360,11 @@ final class UpdateHandler extends AbstractHandler
                     );
                     clearstatcache(true, $filePath);
                     if (filesize($filePath) !== $filesize || filemtime($filePath) !== $filemtime) {
-                        throw new \RuntimeException('计算校验值时文件发生变化，请重新更新');
+                        throw new \RuntimeException('File changed while calculating its checksum; restart the update');
                     }
                 }
                 if ($md5 === '') {
-                    throw new \RuntimeException('无法计算文件校验值');
+                    throw new \RuntimeException('Unable to calculate file checksum');
                 }
 
                 $pkg->filesize = $filesize;
@@ -423,12 +423,12 @@ final class UpdateHandler extends AbstractHandler
                 'processed' => $index + 1,
                 'total' => $total,
                 'message' => $checkpointSaved
-                    ? '已保存更新检查点（' . ($index + 1) . '/' . $total . '）'
-                    : '正在检查套件…',
+                    ? 'Update checkpoint saved (' . ($index + 1) . '/' . $total . ')'
+                    : 'Checking packages…',
             ]);
             if (connection_aborted()) {
                 $this->saveUpdateCheckpoint($checkpointEntries);
-                throw new \RuntimeException('浏览器连接已中断，扫描进度已保存');
+                throw new \RuntimeException('Browser connection was interrupted; scan progress was saved');
             }
         }
 
@@ -436,11 +436,11 @@ final class UpdateHandler extends AbstractHandler
             if ($total === 0) {
                 throw new \RuntimeException('No .spk files were found in the packages directory.');
             }
-            throw new \RuntimeException('没有可写入数据库的有效 DSM 7 套件，请查看失败列表');
+            throw new \RuntimeException('No valid DSM 7 packages are available to write to the database; review the failure list');
         }
 
         $this->saveUpdateCheckpoint($checkpointEntries);
-        $emit(['type' => 'progress', 'percent' => 95, 'message' => '正在写入数据库索引…']);
+        $emit(['type' => 'progress', 'percent' => 95, 'message' => 'Writing database index…']);
         Db::startTrans();
         try {
             Db::table($tableName)->delete(true);
@@ -535,15 +535,15 @@ final class UpdateHandler extends AbstractHandler
             'entries' => $entries,
         ]);
         if (strlen($payload) > self::CHECKPOINT_MAX_BYTES) {
-            throw new \RuntimeException('更新检查点超过大小限制');
+            throw new \RuntimeException('Update checkpoint exceeds the size limit');
         }
         if (file_put_contents($temporary, $payload, LOCK_EX) === false) {
-            throw new \RuntimeException('无法写入更新检查点');
+            throw new \RuntimeException('Unable to write update checkpoint');
         }
         @chmod($temporary, 0600);
         if (!@rename($temporary, $filename)) {
             @unlink($temporary);
-            throw new \RuntimeException('无法替换更新检查点');
+            throw new \RuntimeException('Unable to replace update checkpoint');
         }
     }
 
@@ -576,7 +576,7 @@ final class UpdateHandler extends AbstractHandler
     ): string {
         $handle = @fopen($filePath, 'rb');
         if ($handle === false) {
-            throw new \RuntimeException('无法打开文件计算 MD5');
+            throw new \RuntimeException('Unable to open file for MD5 calculation');
         }
 
         $context = hash_init('md5');
@@ -590,11 +590,11 @@ final class UpdateHandler extends AbstractHandler
             while (!feof($handle)) {
                 $chunk = fread($handle, $chunkSize);
                 if ($chunk === false) {
-                    throw new \RuntimeException('读取文件时发生错误');
+                    throw new \RuntimeException('An error occurred while reading the file');
                 }
                 if ($chunk === '') {
                     if (!feof($handle)) {
-                        throw new \RuntimeException('读取文件时没有取得数据');
+                        throw new \RuntimeException('No data was returned while reading the file');
                     }
                     break;
                 }
@@ -610,14 +610,14 @@ final class UpdateHandler extends AbstractHandler
                         'processed' => $fileIndex,
                         'total' => $fileTotal,
                         'filePercent' => $filePercent,
-                        'message' => '计算 MD5：' . $label . '（' . $filePercent . '%）',
+                        'message' => 'Calculating MD5: ' . $label . ' (' . $filePercent . '%)',
                     ]);
                     $lastEmittedBytes = $hashedBytes;
                     $lastEmittedAt = $now;
                 }
 
                 if (connection_aborted()) {
-                    throw new \RuntimeException('浏览器连接已中断');
+                    throw new \RuntimeException('Browser connection was interrupted');
                 }
             }
 

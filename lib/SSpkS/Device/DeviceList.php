@@ -18,12 +18,12 @@ final class DeviceList
         $relativePath = ltrim((string) $config->paths['models'], '/\\');
         $this->yamlFilepath = $config->basePath . DIRECTORY_SEPARATOR . $relativePath;
         if (!is_file($this->yamlFilepath)) {
-            throw new \RuntimeException('找不到机型列表文件：' . $relativePath);
+            throw new \RuntimeException('Model list file not found: ' . $relativePath);
         }
 
         $mtime = filemtime($this->yamlFilepath);
         if ($mtime === false) {
-            throw new \RuntimeException('无法读取机型列表的修改时间');
+            throw new \RuntimeException('Unable to read the model list modification time');
         }
         $cacheKey = 'devices_v2';
 
@@ -62,16 +62,16 @@ final class DeviceList
             throw new \RuntimeException($e->getMessage(), 0, $e);
         }
         if (!is_array($familyList)) {
-            throw new \RuntimeException('机型列表结构无效');
+            throw new \RuntimeException('Invalid model list structure');
         }
 
         foreach ($familyList as $family => $architectureList) {
             if (!is_array($architectureList)) {
-                throw new \RuntimeException($family . ' 的架构列表必须为数组');
+                throw new \RuntimeException('The architecture list for ' . $family . ' must be an array');
             }
             foreach ($architectureList as $architecture => $models) {
                 if (!is_array($models)) {
-                    throw new \RuntimeException($architecture . ' 的机型列表必须为数组');
+                    throw new \RuntimeException('The model list for ' . $architecture . ' must be an array');
                 }
                 $this->families[$architecture] = $family;
                 foreach ($models as $model) {

@@ -127,13 +127,13 @@ final class Config
         $databaseFile = $this->readYaml($basePath . DIRECTORY_SEPARATOR . 'conf/database.yaml');
 
         if (!isset($databaseFile['database']) || !is_array($databaseFile['database'])) {
-            throw new \RuntimeException('数据库配置结构无效');
+            throw new \RuntimeException('Invalid database configuration structure');
         }
         foreach (self::DEFAULTS as $section => $defaultValue) {
             if (isset($siteConfig[$section])
                 && is_array($defaultValue)
                 && !is_array($siteConfig[$section])) {
-                throw new \RuntimeException('配置段必须是 YAML 映射：' . $section);
+                throw new \RuntimeException('Configuration section must be a YAML mapping: ' . $section);
             }
         }
 
@@ -159,7 +159,7 @@ final class Config
     private function readYaml(string $file): array
     {
         if (!is_file($file)) {
-            throw new \RuntimeException('找不到配置文件：' . $file);
+            throw new \RuntimeException('Configuration file not found: ' . $file);
         }
         try {
             $parsed = Yaml::parseFile($file);
@@ -167,7 +167,7 @@ final class Config
             throw new \RuntimeException($e->getMessage(), 0, $e);
         }
         if (!is_array($parsed)) {
-            throw new \RuntimeException('配置文件必须包含 YAML 映射结构：' . $file);
+            throw new \RuntimeException('Configuration file must contain a YAML mapping: ' . $file);
         }
         return $parsed;
     }
@@ -210,13 +210,13 @@ final class Config
     {
         $theme = trim((string) $this->config['site']['theme']);
         if (preg_match('/^[a-z0-9_-]+$/iD', $theme) !== 1) {
-            throw new \RuntimeException('主题名称格式无效');
+            throw new \RuntimeException('Invalid theme name format');
         }
         $this->config['site']['theme'] = $theme;
 
         $baseUrl = trim((string) $this->config['site']['base_url']);
         if ($baseUrl !== '' && !$this->isAbsoluteHttpUrl($baseUrl)) {
-            throw new \RuntimeException('site.base_url 必须是有效的 HTTP 或 HTTPS 网址');
+            throw new \RuntimeException('site.base_url must be a valid HTTP or HTTPS URL');
         }
         $this->config['site']['base_url'] = $baseUrl;
 
@@ -297,12 +297,12 @@ final class Config
             $type = 'sqlite';
         }
         if (!in_array($type, ['mysql', 'sqlite'], true)) {
-            throw new \RuntimeException('database.type 仅支持 mysql 或 sqlite');
+            throw new \RuntimeException('database.type supports only mysql or sqlite');
         }
 
         $prefix = (string) ($this->databaseConfig['prefix'] ?? 'wd_');
         if (preg_match('/^[a-z0-9_]*$/iD', $prefix) !== 1) {
-            throw new \RuntimeException('数据库表前缀只能包含字母、数字和下划线');
+            throw new \RuntimeException('Database table prefix may contain only letters, numbers, and underscores');
         }
 
         if ($type === 'mysql') {
@@ -313,7 +313,7 @@ final class Config
 
         $database = trim((string) ($this->databaseConfig['database'] ?? ''));
         if ($database === '') {
-            throw new \RuntimeException('SQLite 数据库文件路径不能为空');
+            throw new \RuntimeException('SQLite database file path must not be empty');
         }
         if (!$this->isAbsoluteFilesystemPath($database)) {
             $database = $this->basePath . DIRECTORY_SEPARATOR
@@ -324,10 +324,10 @@ final class Config
         if (!is_dir($directory)
             && !mkdir($directory, 0770, true)
             && !is_dir($directory)) {
-            throw new \RuntimeException('无法创建 SQLite 数据库目录：' . $directory);
+            throw new \RuntimeException('Unable to create SQLite database directory: ' . $directory);
         }
         if (!is_writable($directory)) {
-            throw new \RuntimeException('SQLite 数据库目录不可写：' . $directory);
+            throw new \RuntimeException('SQLite database directory is not writable: ' . $directory);
         }
 
         $this->databaseConfig = [
@@ -362,11 +362,11 @@ final class Config
                 || !$this->isAllowedAdvertisementUrl($targetUrl)) {
                 continue;
             }
-            $alt = trim((string) ($item['alt'] ?? '广告'));
+            $alt = trim((string) ($item['alt'] ?? 'Advertisement'));
             $normalised[] = [
                 'image_url' => $imageUrl,
                 'target_url' => $targetUrl,
-                'alt' => $alt === '' ? '广告' : $alt,
+                'alt' => $alt === '' ? 'Advertisement' : $alt,
             ];
         }
         return $normalised;
@@ -409,7 +409,7 @@ final class Config
         $type = (string) $this->databaseConfig['type'];
         $extension = $type === 'sqlite' ? 'pdo_sqlite' : 'pdo_mysql';
         if (!extension_loaded($extension)) {
-            throw new \RuntimeException('当前数据库配置需要启用 PHP 扩展：' . $extension);
+            throw new \RuntimeException('The current database configuration requires the PHP extension: ' . $extension);
         }
 
         Db::setConfig([

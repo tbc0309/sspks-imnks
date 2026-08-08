@@ -17,11 +17,11 @@
 {{/ packagelist }}
 <div class="mdl-grid package-grid" data-progressive-grid>
 {{# packagelist }}
-    <article class="mdl-cell mdl-cell--6-col mdl-card spk-card{{# beta }} spk-beta{{/ beta }}{{# run_as_root }} spk-root{{/ run_as_root }}" hidden data-progressive-card>
+    <article class="mdl-cell mdl-cell--6-col mdl-card spk-card{{# beta }} spk-beta{{/ beta }}" hidden data-progressive-card>
         <div class="spk-card__header">
             <div class="spk-icon">
                 <img src="{{ thumbnail_url.0 }}" alt="{{ displayname }}" width="72" height="72" loading="lazy" decoding="async">
-                <span class="spk-status-badges">{{# run_as_root }}<span class="spk-root-badge" title="ROOT">ROOT</span>{{/ run_as_root }}{{# beta }}<span class="spk-beta-badge" title="BETA">BETA</span>{{/ beta }}</span>
+                <span class="spk-status-badges">{{# beta }}<span class="spk-beta-badge" title="BETA">BETA</span>{{/ beta }}</span>
             </div>
             <div class="spk-card__heading">
                 <h2 class="mdl-card__title-text">{{ displayname }}</h2>

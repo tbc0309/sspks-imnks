@@ -42,7 +42,7 @@ final class BrowserPackageCatalog
     private function load(?string $architecture, bool $refresh): array
     {
         $scope = $architecture === null ? 'all' : strtolower($architecture);
-        $cacheKey = 'browser_catalog_v20_' . md5(
+        $cacheKey = 'browser_catalog_v21_' . md5(
             $scope . '|' . $this->language . '|' . (int) $this->downloadEnabled
             . '|' . (int) $this->config->browser_url_obfuscation['package_images']
             . '|' . (int) $this->config->browser_url_obfuscation['spk_downloads']

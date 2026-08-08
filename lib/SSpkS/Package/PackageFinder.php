@@ -14,7 +14,7 @@ final class PackageFinder
         $this->config = $config;
         $folder = rtrim((string) $config->paths['packages'], '/\\');
         if (!is_dir($folder)) {
-            throw new \RuntimeException('套件路径不是目录：' . $folder);
+            throw new \RuntimeException('Package path is not a directory: ' . $folder);
         }
         $this->pattern = $folder . DIRECTORY_SEPARATOR . (string) $config->packages['file_mask'];
     }

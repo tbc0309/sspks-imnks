@@ -38,9 +38,9 @@ final class BrowserPackageListHandler extends AbstractHandler
         $models = $deviceList->getModelsForArchitecture($arch);
         $modelCount = count($models);
         $isChinese = in_array($this->language->code(), ['chs', 'cht'], true);
-        $modelPreview = implode($isChinese ? '、' : ', ', array_slice($models, 0, 6));
+        $modelPreview = implode($isChinese ? "\u{3001}" : ', ', array_slice($models, 0, 6));
         if ($modelCount > 6) {
-            $modelPreview .= $isChinese ? ' 等' : '…';
+            $modelPreview .= $isChinese ? " \u{7B49}" : '…';
         }
 
         $output = new HtmlOutput($this->config);

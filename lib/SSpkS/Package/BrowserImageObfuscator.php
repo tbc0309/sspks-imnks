@@ -76,7 +76,7 @@ final class BrowserImageObfuscator
                 continue;
             }
             if (!@unlink($entry->getPathname())) {
-                throw new \RuntimeException('无法删除旧的网页图片：' . $entry->getFilename());
+                throw new \RuntimeException('Unable to delete stale browser image: ' . $entry->getFilename());
             }
         }
     }
@@ -100,7 +100,7 @@ final class BrowserImageObfuscator
         try {
             if ($sourceExtension === 'webp') {
                 if (!@copy($source, $temporary)) {
-                    throw new \RuntimeException('无法复制网页 WebP 图片');
+                    throw new \RuntimeException('Unable to copy browser WebP image');
                 }
             } else {
                 $this->convertToWebp($source, $temporary);
@@ -109,7 +109,7 @@ final class BrowserImageObfuscator
             @chmod($temporary, 0644);
             if (!@rename($temporary, $destination)) {
                 if (!is_file($destination)) {
-                    throw new \RuntimeException('无法发布网页 WebP 图片');
+                    throw new \RuntimeException('Unable to publish browser WebP image');
                 }
             }
         } finally {
@@ -125,7 +125,7 @@ final class BrowserImageObfuscator
             $contents = @file_get_contents($source);
             $image = $contents === false ? false : @imagecreatefromstring($contents);
             if ($image === false) {
-                throw new \RuntimeException('GD 无法解码源图片');
+                throw new \RuntimeException('GD was unable to decode the source image');
             }
             try {
                 if (function_exists('imagepalettetotruecolor')) {
@@ -134,7 +134,7 @@ final class BrowserImageObfuscator
                 @imagealphablending($image, true);
                 @imagesavealpha($image, true);
                 if (!@imagewebp($image, $destination, self::WEBP_QUALITY)) {
-                    throw new \RuntimeException('GD 无法编码 WebP 图片');
+                    throw new \RuntimeException('GD was unable to encode the WebP image');
                 }
             } finally {
                 @imagedestroy($image);
@@ -150,7 +150,7 @@ final class BrowserImageObfuscator
                 $image->setImageCompressionQuality(self::WEBP_QUALITY);
                 $image->stripImage();
                 if (!$image->writeImage($destination)) {
-                    throw new \RuntimeException('Imagick 无法编码 WebP 图片');
+                    throw new \RuntimeException('Imagick was unable to encode the WebP image');
                 }
             } finally {
                 $image->clear();
@@ -159,7 +159,7 @@ final class BrowserImageObfuscator
             return;
         }
 
-        throw new \RuntimeException('需要启用支持 WebP 的 PHP GD 或 Imagick 扩展');
+        throw new \RuntimeException('PHP GD or Imagick with WebP support is required');
     }
 
     private function assertWebpFile(string $filename): void
@@ -169,7 +169,7 @@ final class BrowserImageObfuscator
             || strlen($signature) !== 12
             || substr($signature, 0, 4) !== 'RIFF'
             || substr($signature, 8, 4) !== 'WEBP') {
-            throw new \RuntimeException('生成的网页图片不是有效的 WebP 文件');
+            throw new \RuntimeException('Generated browser image is not a valid WebP file');
         }
     }
 
@@ -181,16 +181,16 @@ final class BrowserImageObfuscator
 
         $basePath = realpath($this->config->basePath);
         if ($basePath === false) {
-            throw new \RuntimeException('应用程序目录无效');
+            throw new \RuntimeException('Invalid application directory');
         }
         $cachePath = trim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, (string) $this->config->paths['cache']), DIRECTORY_SEPARATOR);
         $directory = $basePath . DIRECTORY_SEPARATOR . $cachePath . DIRECTORY_SEPARATOR . 'i';
         if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
-            throw new \RuntimeException('无法创建网页图片缓存目录');
+            throw new \RuntimeException('Unable to create browser image cache directory');
         }
         $realDirectory = realpath($directory);
         if ($realDirectory === false || !$this->isInside($realDirectory, $basePath)) {
-            throw new \RuntimeException('网页图片缓存目录无效');
+            throw new \RuntimeException('Invalid browser image cache directory');
         }
 
         $this->publishDirectory = $realDirectory;

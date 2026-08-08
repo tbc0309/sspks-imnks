@@ -14,7 +14,7 @@ final class TarArchiveGuard
     {
         $handle = @fopen($filename, 'rb');
         if ($handle === false) {
-            throw new \RuntimeException('无法打开套件归档进行验证');
+            throw new \RuntimeException('Unable to open package archive for validation');
         }
 
         $pendingLongName = null;
@@ -30,7 +30,7 @@ final class TarArchiveGuard
 
                 if ($type === 'L') {
                     if ($size > self::MAX_LONG_NAME_SIZE) {
-                        throw new \RuntimeException('套件归档包含过长的条目名称');
+                        throw new \RuntimeException('Package archive contains an excessively long entry name');
                     }
                     $pendingLongName = rtrim(self::readBytes($handle, $size), "\0");
                     self::skipPadding($handle, $size);
@@ -52,13 +52,13 @@ final class TarArchiveGuard
     {
         $block = fread($handle, self::BLOCK_SIZE);
         if ($block === false) {
-            throw new \RuntimeException('无法读取套件归档头');
+            throw new \RuntimeException('Unable to read package archive header');
         }
         if ($block === '') {
             return null;
         }
         if (strlen($block) !== self::BLOCK_SIZE) {
-            throw new \RuntimeException('套件归档不完整');
+            throw new \RuntimeException('Package archive is incomplete');
         }
         return $block;
     }
@@ -69,7 +69,7 @@ final class TarArchiveGuard
         while (strlen($data) < $length) {
             $chunk = fread($handle, min(8192, $length - strlen($data)));
             if ($chunk === false || $chunk === '') {
-                throw new \RuntimeException('套件归档不完整');
+                throw new \RuntimeException('Package archive is incomplete');
             }
             $data .= $chunk;
         }
@@ -97,7 +97,7 @@ final class TarArchiveGuard
         $normalised = ltrim($normalised, '/');
 
         if (preg_match('~(?:^|/)\.phar(?:/|$)~i', $normalised) === 1) {
-            throw new \RuntimeException('套件归档包含禁止使用的 PHAR 元数据');
+            throw new \RuntimeException('Package archive contains forbidden PHAR metadata');
         }
     }
 
@@ -108,12 +108,12 @@ final class TarArchiveGuard
             return 0;
         }
         if (preg_match('/^[0-7]+$/D', $value) !== 1) {
-            throw new \RuntimeException('套件归档包含无效的条目大小');
+            throw new \RuntimeException('Package archive contains an invalid entry size');
         }
 
         $size = octdec($value);
         if (!is_int($size) || $size < 0) {
-            throw new \RuntimeException('套件归档条目过大');
+            throw new \RuntimeException('Package archive entry is too large');
         }
         return $size;
     }
@@ -121,7 +121,7 @@ final class TarArchiveGuard
     private static function paddedSize(int $size): int
     {
         if ($size > PHP_INT_MAX - (self::BLOCK_SIZE - 1)) {
-            throw new \RuntimeException('套件归档条目过大');
+            throw new \RuntimeException('Package archive entry is too large');
         }
         return (int) (ceil($size / self::BLOCK_SIZE) * self::BLOCK_SIZE);
     }
@@ -137,7 +137,7 @@ final class TarArchiveGuard
             return;
         }
         if (fseek($handle, $length, SEEK_CUR) !== 0) {
-            throw new \RuntimeException('无法在套件归档中定位数据');
+            throw new \RuntimeException('Unable to locate data in package archive');
         }
     }
 }

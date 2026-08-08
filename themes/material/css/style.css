@@ -23,9 +23,6 @@
     --danger-surface: #fff1f2;
     --danger-line: #fecdd3;
     --danger-ink: #9f1239;
-    --root-surface: #ffe3e5;
-    --root-line: #fda1a7;
-    --root-ink: #881337;
     --focus: #f59e0b;
     --radius: 16px;
     --shadow: 0 12px 32px color-mix(in srgb, var(--brand-950) 9%, transparent);
@@ -99,9 +96,6 @@ html[data-palette='dark'] {
     --danger-surface: #31171d;
     --danger-line: #6a2b39;
     --danger-ink: #fecdd6;
-    --root-surface: #422026;
-    --root-line: #834052;
-    --root-ink: #ffd4dc;
     --page-glow: rgba(255, 104, 70, 0.08);
     --beta-surface: #33271a;
     --beta-line: #8a6737;
@@ -868,8 +862,7 @@ a {
     height: 22px;
 }
 
-.spk-beta-badge,
-.spk-root-badge {
+.spk-beta-badge {
     position: absolute;
     top: 0;
     display: inline-flex;
@@ -894,32 +887,9 @@ a {
     right: 0;
 }
 
-.spk-root-badge {
-    left: 0;
-    color: var(--root-ink);
-    background: var(--root-line);
-}
-
-.spk-root-badge:only-child {
-    right: 0;
-    left: auto;
-}
-
 .spk-beta {
     background: linear-gradient(145deg, var(--surface), var(--beta-surface));
     border-color: var(--beta-line);
-}
-
-.spk-root {
-    background: linear-gradient(145deg, var(--surface), var(--root-surface));
-    border-color: var(--root-line);
-}
-
-.spk-root.spk-beta {
-    background:
-        linear-gradient(90deg, var(--root-surface), var(--surface) 50%, var(--beta-surface)) padding-box,
-        linear-gradient(90deg, var(--root-line), var(--line) 50%, var(--beta-line)) border-box;
-    border-color: transparent;
 }
 
 .package-loader {

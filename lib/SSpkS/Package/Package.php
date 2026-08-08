@@ -22,7 +22,6 @@ use SSpkS\Config;
  * @property array $snapshot
  * @property array $snapshot_url
  * @property bool $beta
- * @property bool $run_as_root
  * @property string $os_min_ver
  * @property string $os_max_ver
  * @property array $exclude_arch
@@ -55,10 +54,10 @@ class Package
     {
         $this->config = $config;
         if (!preg_match('/\.spk$/i', $filename)) {
-            throw new \Exception('文件不是 .spk 格式：' . $filename);
+            throw new \Exception('File does not use the .spk extension: ' . $filename);
         }
         if (!file_exists($filename)) {
-            throw new \Exception('找不到文件：' . $filename);
+            throw new \Exception('File not found: ' . $filename);
         }
         $this->filepath = $filename;
         $this->filename = basename($filename);
@@ -68,11 +67,11 @@ class Package
         $this->wizfile = $this->filepathNoExt . '.wiz';
         $this->nowizfile = $this->filepathNoExt . '.nowiz';
         if (!is_dir(dirname($this->metafile)) && !mkdir(dirname($this->metafile), 0770, true)) {
-            throw new \RuntimeException('无法创建套件缓存目录');
+            throw new \RuntimeException('Unable to create package cache directory');
         }
         $packageMtime = filemtime($this->filepath);
         if ($packageMtime === false) {
-            throw new \RuntimeException('无法读取套件文件的修改时间');
+            throw new \RuntimeException('Unable to read package file modification time');
         }
         if (file_exists($this->metafile) && filemtime($this->metafile) < $packageMtime) {
             $staleFiles = array_merge(
@@ -140,28 +139,28 @@ class Package
         $requiredFields = ['package', 'version', 'os_min_ver', 'description', 'arch', 'maintainer'];
         foreach ($requiredFields as $field) {
             if (!isset($this->metadata[$field]) || trim((string) $this->metadata[$field]) === '') {
-                throw new \RuntimeException($this->filename . '：缺少 DSM 7 必需的 INFO 字段：' . $field);
+                throw new \RuntimeException($this->filename . ': missing required DSM 7 INFO field: ' . $field);
             }
         }
         if (preg_match('/[:\/><|=]/', (string) $this->metadata['package'])) {
-            throw new \RuntimeException($this->filename . '：package 字段包含禁止使用的字符');
+            throw new \RuntimeException($this->filename . ': package field contains forbidden characters');
         }
         if (!$this->isValidPackageVersion((string) $this->metadata['version'])) {
-            throw new \RuntimeException($this->filename . '：DSM 套件版本格式无效');
+            throw new \RuntimeException($this->filename . ': invalid DSM package version format');
         }
         if (!preg_match('/^[a-z0-9_]+(?:\s+[a-z0-9_]+)*$/i', trim((string) $this->metadata['arch']))) {
-            throw new \RuntimeException($this->filename . '：架构列表格式无效');
+            throw new \RuntimeException($this->filename . ': invalid architecture list format');
         }
         $minimumDsmVersion = (string) $this->metadata['os_min_ver'];
         if (!self::isValidDsmVersion($minimumDsmVersion)
             || self::compareDsmVersions($minimumDsmVersion, '7.0-40000') < 0) {
-            throw new \RuntimeException($this->filename . '：DSM 7 的 os_min_ver 不能低于 7.0-40000');
+            throw new \RuntimeException($this->filename . ': DSM 7 os_min_ver must not be lower than 7.0-40000');
         }
         $maximumDsmVersion = trim((string) ($this->metadata['os_max_ver'] ?? ''));
         if ($maximumDsmVersion !== ''
             && (!self::isValidDsmVersion($maximumDsmVersion)
                 || self::compareDsmVersions($maximumDsmVersion, $minimumDsmVersion) < 0)) {
-            throw new \RuntimeException($this->filename . '：os_max_ver 格式无效或低于 os_min_ver');
+            throw new \RuntimeException($this->filename . ': os_max_ver is invalid or lower than os_min_ver');
         }
         if (!isset($this->metadata['displayname'])) {
             $this->metadata['displayname'] = $this->metadata['package'];
@@ -180,7 +179,6 @@ class Package
         $this->fixBoolIfExist('silent_upgrade');
 
         $this->metadata['beta'] = $this->isBeta();
-        $this->metadata['run_as_root'] = $this->runsAsRoot();
 
         $qValue = !$this->hasWizardDir();
         $this->metadata['thumbnail'] = $this->getThumbnails();
@@ -198,14 +196,14 @@ class Package
     {
         $content = file_get_contents($filename);
         if ($content === false) {
-            throw new \RuntimeException('无法读取套件中的 INFO 文件：' . $this->filename);
+            throw new \RuntimeException('Unable to read INFO from package: ' . $this->filename);
         }
 
         if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
             $content = substr($content, 3);
         }
         if (strpos($content, "\0") !== false || preg_match('//u', $content) !== 1) {
-            throw new \RuntimeException($this->filename . '：INFO 必须使用有效的 UTF-8 编码');
+            throw new \RuntimeException($this->filename . ': INFO must use valid UTF-8 encoding');
         }
 
         $metadata = [];
@@ -218,7 +216,7 @@ class Package
                 continue;
             }
             if (!preg_match('/^\s*([A-Za-z][A-Za-z0-9_]*)\s*=(.*)$/u', $line, $matches)) {
-                throw new \RuntimeException(sprintf('%s：INFO 第 %d 行语法无效', $this->filename, $lineNumber + 1));
+                throw new \RuntimeException(sprintf('%s: invalid INFO syntax on line %d', $this->filename, $lineNumber + 1));
             }
             $value = trim($matches[2]);
             $valueLineNumber = $lineNumber + 1;
@@ -229,7 +227,7 @@ class Package
         }
 
         if ($metadata === []) {
-            throw new \RuntimeException('套件中的 INFO 文件无效：' . $this->filename);
+            throw new \RuntimeException('Invalid INFO file in package: ' . $this->filename);
         }
         return $metadata;
     }
@@ -242,7 +240,7 @@ class Package
 
         $quote = $value[0];
         if (strlen($value) < 2 || substr($value, -1) !== $quote) {
-            throw new \RuntimeException(sprintf('%s：INFO 第 %d 行的引号没有闭合', $this->filename, $lineNumber));
+            throw new \RuntimeException(sprintf('%s: unclosed quote in INFO on line %d', $this->filename, $lineNumber));
         }
 
         $inner = substr($value, 1, -1);
@@ -295,43 +293,6 @@ class Package
         return $this->metadata;
     }
 
-    private function runsAsRoot(): bool
-    {
-        foreach ($this->metadata as $field => $value) {
-            if (stripos((string) $field, 'description') !== 0 || !is_scalar($value)) {
-                continue;
-            }
-            $description = (string) $value;
-            if (stripos($description, 'root权限') !== false || stripos($description, 'root privileges') !== false) {
-                return true;
-            }
-        }
-
-        try {
-            $archive = $this->openArchive();
-            if (!isset($archive['conf/privilege'])) {
-                return false;
-            }
-            $entry = $archive['conf/privilege'];
-            if ($entry->getSize() > 1024 * 1024) {
-                error_log('[SSpkS] Unexpected conf/privilege size in ' . $this->filename);
-                return false;
-            }
-            $content = $entry->getContent();
-        } catch (\Throwable $e) {
-            return false;
-        }
-        if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
-            $content = substr($content, 3);
-        }
-        $privilege = json_decode($content, true);
-        if (!is_array($privilege)) {
-            error_log('[SSpkS] Failed to parse conf/privilege in ' . $this->filename);
-            return false;
-        }
-        return strtolower(trim((string) ($privilege['defaults']['run-as'] ?? ''))) === 'root';
-    }
-
     public function extractIfMissing(string $inPkgName, string $targetFile): bool
     {
         if (file_exists($targetFile)) {
@@ -339,17 +300,17 @@ class Package
         }
         $tmp_dir = sys_get_temp_dir();
         self::ensureAvailableSpace($tmp_dir, 'TMP');
-        self::ensureAvailableSpace(dirname($targetFile), '套件缓存');
+        self::ensureAvailableSpace(dirname($targetFile), 'Package cache');
         $p = $this->openArchive();
         $workDir = $tmp_dir . DIRECTORY_SEPARATOR . 'sspks-' . bin2hex(random_bytes(8));
         if (!mkdir($workDir, 0700)) {
-            throw new \RuntimeException('无法创建临时解压目录');
+            throw new \RuntimeException('Unable to create temporary extraction directory');
         }
         $tmpExtractedFilepath = $workDir . DIRECTORY_SEPARATOR . $inPkgName;
         try {
             $p->extractTo($workDir, $inPkgName);
             if (!is_file($tmpExtractedFilepath) || !copy($tmpExtractedFilepath, $targetFile)) {
-                throw new \RuntimeException('无法从 ' . $this->filename . ' 缓存文件：' . $inPkgName);
+                throw new \RuntimeException('Unable to cache file from ' . $this->filename . ': ' . $inPkgName);
             }
         } finally {
             if (is_file($tmpExtractedFilepath)) {
@@ -364,7 +325,7 @@ class Package
     {
         $free = @disk_free_space($dir);
         if (!empty($free) && $free < 2 * 1024 * 1024) {
-            throw new \Exception($friendlyName . ' 目录仅剩 ' . $free . ' 字节可用空间，磁盘空间不足');
+            throw new \Exception($friendlyName . ' directory has only ' . $free . ' bytes free; insufficient disk space');
         }
     }
 
@@ -399,7 +360,7 @@ class Package
         try {
             return new \PharData($this->filepath, \Phar::CURRENT_AS_FILEINFO | \Phar::KEY_AS_FILENAME);
         } catch (\UnexpectedValueException $e) {
-            throw new \Exception('套件文件不可读取：' . $this->filepath, 0, $e);
+            throw new \Exception('Package file is not readable: ' . $this->filepath, 0, $e);
         }
     }
 

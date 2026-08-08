@@ -93,7 +93,7 @@ final class JsonOutput
 
         $json = json_encode($output, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
         if ($json === false) {
-            throw new \RuntimeException('无法编码套件中心响应');
+            throw new \RuntimeException('Unable to encode Package Center response');
         }
         return $json;
     }
