@@ -1,0 +1,91 @@
+{{> html_head }}
+<div class="list-heading">
+    <div>
+        <span class="eyebrow">PACKAGE CATALOG</span>
+        <h1>{{ catalogTitle }}</h1>
+    </div>
+    <a class="back-link" href="{{ baseUrlRelative }}">{{ back_models }}</a>
+</div>
+{{# catalogSummary }}
+<p class="catalog-summary">{{ catalogSummary }}</p>
+{{/ catalogSummary }}
+{{^ packagelist }}
+<div class="status-message" role="status">
+    <h1>{{ emptyTitle }}</h1>
+    <p>{{ emptyMessage }}</p>
+</div>
+{{/ packagelist }}
+<div class="mdl-grid package-grid" data-progressive-grid>
+{{# packagelist }}
+    <article class="mdl-cell mdl-cell--6-col mdl-card spk-card{{# beta }} spk-beta{{/ beta }}" hidden data-progressive-card>
+        <div class="spk-card__header">
+            <div class="spk-icon">
+                <img src="{{ thumbnail_url.0 }}" alt="{{ displayname }}" width="72" height="72" loading="lazy" decoding="async">
+                <span class="spk-status-badges">{{# beta }}<span class="spk-beta-badge" title="BETA">BETA</span>{{/ beta }}</span>
+            </div>
+            <div class="spk-card__heading">
+                <h2 class="mdl-card__title-text">{{ displayname }}</h2>
+                <span class="spk-version">{{ cardLatestVersion }} v{{ version }}</span>
+            </div>
+{{# hasRuntimeBadges }}
+            <div class="spk-runtime-badges" aria-label="{{ cardRuntime }}">
+{{# runtimeBadges }}
+                <span class="spk-runtime-badge spk-runtime-badge--{{ type }}" title="{{ title }}">
+                    <img src="{{ themeUrl }}images/runtime/{{ icon }}" alt="" width="22" height="22" loading="lazy" decoding="async" aria-hidden="true">
+                    <span>{{ label }}</span>
+                </span>
+{{/ runtimeBadges }}
+            </div>
+{{/ hasRuntimeBadges }}
+        </div>
+        <div class="spk-compatibility">{{ cardMinimumDsm }} <strong>{{ os_min_ver }}</strong></div>
+        <div class="mdl-card__supporting-text spk-description">{{ description }}</div>
+        <div class="mdl-card__supporting-text spk-details spk-details-hidden" aria-hidden="true">
+            <dl>
+                <dt>{{ cardInternalName }}</dt>
+                <dd>{{ package }}</dd>
+                <dt>{{ cardLatestVersion }}</dt>
+                <dd>{{ version }}</dd>
+                <dt>{{ cardDisplayName }}</dt>
+                <dd>{{ displayname }}</dd>
+                <dt>{{ cardMaintainer }}</dt>
+                <dd>
+{{# maintainerUrl }}
+                    <a href="{{ maintainerUrl }}" target="_blank" rel="noopener noreferrer">{{ packageMaintainer }}</a>
+{{/ maintainerUrl }}
+{{^ maintainerUrl }}
+                    {{ packageMaintainer }}
+{{/ maintainerUrl }}
+                </dd>
+                <dt>{{ cardArchitectures }}</dt>
+                <dd>{{# arch }}<code>{{ . }}</code> {{/ arch }}</dd>
+            </dl>
+        </div>
+        <div class="mdl-layout-spacer"></div>
+        <div class="spk-actions mdl-card__actions">
+            <button class="mdl-button" type="button" data-toggle-details aria-expanded="false">{{ cardDetails }}</button>
+            <div class="spk-download">
+                <span class="spk-filesize">SPK · {{ fileSizeLabel }}</span>
+{{# downloadEnabled }}
+                <a class="mdl-button mdl-button--raised mdl-button--colored" href="{{ downloadUrl }}" download>{{ cardDownload }}</a>
+{{/ downloadEnabled }}
+{{^ downloadEnabled }}
+                <button class="mdl-button mdl-button--raised download-disabled" type="button" disabled>{{ cardDownloadDisabled }}</button>
+{{/ downloadEnabled }}
+            </div>
+        </div>
+    </article>
+{{/ packagelist }}
+</div>
+<div class="package-loader" hidden data-package-loader aria-live="polite">
+    <span data-package-progress></span>
+    <button class="mdl-button mdl-button--raised" type="button" data-load-more-packages>{{ load_more }}</button>
+</div>
+<noscript>
+    <style>
+        .spk-card[data-progressive-card][hidden] {
+            display: flex !important;
+        }
+    </style>
+</noscript>
+{{> html_tail }}

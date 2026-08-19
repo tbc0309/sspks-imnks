@@ -1,0 +1,44 @@
+{{> html_head }}
+<section class="update-panel mdl-card" data-update-panel data-endpoint="{{ updateEndpoint }}">
+    <div class="update-panel__header">
+        <span class="eyebrow">INDEX MANAGEMENT</span>
+        <h1>{{ update_title }}</h1>
+        <p>{{ update_intro }}</p>
+    </div>
+
+    <form class="update-form" data-update-form>
+        <label for="update-token">{{ admin_password }}</label>
+        <div class="update-form__controls">
+            <input id="update-token" name="token" type="password" required autocomplete="off" spellcheck="false" placeholder="{{ password_placeholder }}" data-update-token>
+            <button class="mdl-button mdl-button--raised mdl-button--colored" type="submit" data-update-button>{{ start_update }}</button>
+        </div>
+    </form>
+
+    <div class="update-progress" aria-live="polite">
+        <div class="update-progress__meta">
+            <span data-update-status>{{ waiting }}</span>
+            <output data-update-percent>0%</output>
+        </div>
+        <progress max="100" value="0" data-update-progress>0%</progress>
+        <div class="update-summary">
+            <span>{{ success }} <strong data-success-count>0</strong></span>
+            <span>{{ failure }} <strong data-failure-count>0</strong></span>
+            <span>{{ total }} <strong data-total-count>0</strong></span>
+        </div>
+    </div>
+
+    <div class="update-results">
+        <section class="update-result update-result--success" aria-labelledby="success-title">
+            <h2 id="success-title">{{ success_list }}</h2>
+            <p class="update-result__empty" data-success-empty>{{ no_records }}</p>
+            <ul data-success-list></ul>
+        </section>
+        <section class="update-result update-result--failure" aria-labelledby="failure-title">
+            <h2 id="failure-title">{{ failure_list }}</h2>
+            <p class="update-result__empty" data-failure-empty>{{ no_records }}</p>
+            <ul data-failure-list></ul>
+        </section>
+    </div>
+</section>
+<script src="{{ themeUrl }}js/update.js?v={{ updateVersion }}" defer></script>
+{{> html_tail }}

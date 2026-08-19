@@ -1,0 +1,10 @@
+{{> html_head }}
+<div class="list-heading">
+    <div><span class="eyebrow">PACKAGE CATALOG</span><h1>{{ catalogTitle }}</h1></div>
+    <a class="back-link" href="{{ baseUrlRelative }}">{{ back_models }}</a>
+</div>
+<div class="status-message status-message--error" role="alert">
+    <h1>{{ package_error_title }}</h1>
+    <p>{{ errorMessage }}</p>
+</div>
+{{> html_tail }}

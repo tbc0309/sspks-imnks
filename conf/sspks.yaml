@@ -1,0 +1,146 @@
+# Neutral demonstration configuration for the multilingual edition.
+site:
+    # Displayed in the header, footer, metadata, and generated pages.
+    name: SSPKS-IMNKS
+    # Theme directory name under paths.themes. Use only letters, numbers,
+    # underscores, and hyphens.
+    theme: material
+    # Public HTTP(S) URL of this repository, including any subdirectory.
+    # Keep the trailing slash and update robots.txt to use the same domain.
+    base_url: 'https://packages.example.com/'
+    # Optional absolute URL used to redirect normal browser visits elsewhere.
+    # Leave blank to display the built-in package repository interface.
+    redirectindex:
+    # Search-engine and social-sharing description.
+    description: 'A multilingual third-party package repository for Synology DSM 7.'
+    # Search metadata only; these values do not affect package filtering.
+    keywords:
+        - DSM 7
+        - SPK
+        - package repository
+        - NAS packages
+
+language:
+    # Supported language codes:
+    # chs, cht, csy, dan, enu, fre, ger, hun, ita, jpn, krn,
+    # nld, nor, plk, ptb, ptg, rus, spn, sve, tha, trk
+    # Initial language for first-time visitors. Leave blank to detect the browser language.
+    fixed: ''
+    # Allow visitors to switch language and remember their choice in a cookie.
+    # When false, a configured fixed language is enforced.
+    show_selector: true
+
+# Private package-index refresh URL: https://your-domain/?action={action}
+update:
+    # Change this value before deployment. It must contain 3-128 characters,
+    # start with a letter or number, and use only letters, numbers, dots,
+    # underscores, and hyphens. This hides the management route from routine
+    # scans but does not replace the management password.
+    action: 'change-this-refresh-action'
+
+footer:
+    # Configurable link groups shown above the fixed project/license footer.
+    # Each URL must be an absolute HTTP(S) URL. Invalid or empty groups are ignored.
+    columns:
+        - title: Package Resources
+          links:
+              - label: Synology Download Center
+                url: 'https://www.synology.com/support/download'
+              - label: Synology Archive
+                url: 'https://archive.synology.com/download'
+        - title: Communities
+          links:
+              - label: IMNKS.COM
+                url: 'https://imnks.com/'
+              - label: SynoCommunity
+                url: 'https://synocommunity.com/'
+        - title: Related Projects
+          links:
+              - label: jdel/sspks
+                url: 'https://github.com/jdel/sspks'
+              - label: SSPKS-IMNKS
+                url: 'https://github.com/tbc0309/sspks-imnks'
+
+appearance:
+    # Initial palette: teal, ocean, violet, or dark. Visitors may change it locally.
+    default_palette: teal
+    # Show detected runtime badges such as Docker, PHP, Python, Node.js, and Java.
+    show_runtime_badges: true
+
+models:
+    # true shows the complete model list immediately; false uses the initial counts.
+    show_all_by_default: false
+    # Number of model cards initially shown on desktop and mobile layouts.
+    # Values below 1 are normalized to 1.
+    initial_count_desktop: 12
+    initial_count_mobile: 8
+    # Models listed here are moved to the beginning of the model catalog.
+    # Matching is case-insensitive and duplicates are removed.
+    priority_models:
+        - DS918+
+        - DS920+
+        - DS423+
+        - DS425+
+
+browser_download:
+    # Allow SPK downloads from browser package cards. DSM Package Center access
+    # is independent of this switch. Keep false for a browse-only website.
+    enabled: false
+
+browser_url_obfuscation:
+    # Route package icons through opaque application URLs instead of exposing paths.
+    package_images: true
+    # Route browser SPK downloads through opaque URLs. This has an effect only
+    # when browser_download.enabled is also true.
+    spk_downloads: true
+
+advertisement:
+    # Enable the advertisement/banner carousel between the model filter and cards.
+    enabled: true
+    # Rotation interval in seconds; values are clamped to the 3-60 range.
+    interval_seconds: 6
+    # image_url may be site-relative or absolute. target_url must be an absolute
+    # HTTP(S) URL. Add more entries to enable rotation.
+    items:
+        - image_url: '/themes/material/images/sspks-imnks-ad-placeholder.webp'
+          target_url: 'https://packages.example.com/'
+          alt: 'SSPKS-IMNKS advertisement placeholder'
+
+packages:
+    # Filename pattern scanned inside paths.packages during index refresh.
+    file_mask: '*.spk'
+    # Fallback metadata used only when a package does not provide its own value.
+    maintainer: 'Package Maintainer'
+    maintainer_url: ''
+    distributor: 'Community Repository'
+    distributor_url: ''
+    support_url: ''
+    # Optionally append changelog_ad to the changelog returned to DSM clients.
+    # Leave disabled unless the appended text is appropriate for every package.
+    changelog_ad_enabled: false
+    changelog_ad: ''
+
+paths:
+    # Paths may be relative to the project root. cache, runtime database storage,
+    # packages, configuration, source, and vendor directories must not be exposed
+    # directly by the web server. The cache and SQLite directories must be writable.
+    cache: cache/
+    # Synology model-to-architecture mapping file.
+    models: conf/synology_models.yaml
+    # Directory containing SPK files scanned by the updater.
+    packages: packages/
+    # Parent directory containing the selected site theme.
+    themes: themes/
+
+# Synology service dependencies excluded from generated package metadata.
+# Keep the defaults unless you understand the DSM service dependency fields.
+excludedSynoServices:
+    - apache-sys
+    - apache-web
+    - mdns
+    - samba
+    - db
+    - applenetwork
+    - cron
+    - nfs
+    - firewall

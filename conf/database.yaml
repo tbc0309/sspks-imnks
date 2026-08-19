@@ -1,0 +1,38 @@
+# Database and index-management credentials.
+# Keep this file outside the public web scope and deny direct HTTP access to conf/.
+
+# SQLite is the neutral demonstration default and is usually sufficient for a
+# repository containing only a few hundred packages.
+database:
+    # Supported values: sqlite, sqlite3 (normalized to sqlite), or mysql.
+    type: 'sqlite'
+    # Relative SQLite paths are resolved from the project root. The parent
+    # directory must be writable by PHP. An absolute filesystem path is also valid.
+    database: 'runtime/sspks.sqlite3'
+    # Prefix used for all SSPKS database tables. Use only letters, numbers,
+    # and underscores. Keep the same prefix when importing the supplied SQL schema.
+    prefix: 'wd_'
+    # Enable only while diagnosing database errors; never expose debug output publicly.
+    debug: false
+
+# MySQL/MariaDB example. Replace the SQLite block above with this block.
+# The database and user must already exist, and the user needs permission to
+# create, read, update, and replace the SSPKS index tables.
+# database:
+#     type: 'mysql'
+#     # Database server hostname or IP address.
+#     hostname: '127.0.0.1'
+#     # Optional TCP port. The driver default is used when omitted.
+#     hostport: 3306
+#     # Use a dedicated account instead of a database administrator account.
+#     username: 'sspks_demo'
+#     password: 'change-this-database-password'
+#     database: 'sspks_demo'
+#     # utf8mb4 preserves multilingual package metadata.
+#     charset: 'utf8mb4'
+#     prefix: 'wd_'
+#     debug: false
+
+# Password required by the web index-management page. Replace it before
+# deployment with a long, unique value. SSPKS_UPDATE_TOKEN overrides this value.
+management_password: 'change-this-management-password'
