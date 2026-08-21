@@ -43,6 +43,8 @@ composer install --no-dev --classmap-authoritative --no-interaction
 
 SQLite creates its schema automatically. For MySQL/MariaDB, import `wd_spk2.sql`. An SQLite schema reference is provided in `wd_spk2.sqlite.sql`.
 
+> **Index refresh memory:** Refreshing the package index reads and parses SPK metadata, calculates file hashes, and temporarily holds data before it is written to the database. Memory usage can be significant when the repository contains many packages. Set PHP's `memory_limit` to at least `1024M`, either temporarily for the refresh or permanently, to prevent an out-of-memory interruption. Web refreshes use the PHP-FPM configuration, while command-line refreshes use the CLI configuration; these may load different `php.ini` files. Reload or restart PHP-FPM after changing its permanent configuration.
+
 ## Recommended Nginx configuration
 
 The application handles its own friendly 404 page. Nginx must therefore send requests for files that do not exist to `index.php` while continuing to serve real static assets directly. The example below also blocks sensitive source/configuration paths and provides the internal download location required when browser SPK URL obfuscation is enabled.

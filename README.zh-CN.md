@@ -43,6 +43,8 @@ composer install --no-dev --classmap-authoritative --no-interaction
 
 SQLite 会自动创建表结构；MySQL/MariaDB 请导入 `wd_spk2.sql`。`wd_spk2.sqlite.sql` 是 SQLite 表结构参考。
 
+> **索引更新内存提醒：** 更新套件索引需要读取并解析 SPK 元数据、计算文件哈希并暂存待写入的数据，套件数量较多时会占用较多 PHP 内存。建议将执行更新任务的 PHP `memory_limit` 临时或永久设置为至少 `1024M`，否则任务可能因内存耗尽而在完成前中断。通过网页更新时请检查 PHP-FPM 的配置，通过命令行更新时请检查 CLI PHP 的配置；两者可能使用不同的 `php.ini`。修改永久配置后请重载或重启对应的 PHP-FPM 服务。
+
 ## 推荐的 Nginx 配置
 
 项目已经包含自己的 404 页面，因此 Nginx 应把不存在的文件交给 `index.php`，真实静态资源仍由 Nginx 直接提供。下面的示例同时保护配置、源码、依赖和运行数据，并提供浏览器 SPK 地址混淆所需的内部下载位置。
