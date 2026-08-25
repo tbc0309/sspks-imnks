@@ -151,6 +151,12 @@ Their initial values are hard-coded in `lib/SSpkS/Output/JsonOutput.php`, inside
 - Review every third-party SPK and its license before publication.
 - Keep generated cache files, databases, logs, `.env`, and `.spk` packages out of Git.
 
+## Accessibility
+
+The Material interface targets WCAG 2.2 Level AA. It includes a skip link, visible keyboard focus, semantic landmarks and labels, accessible expandable package details, screen-reader status announcements, touch-friendly controls, reduced-motion support, and contrast-aware light and dark palettes. Accessibility announcements introduced by this project are localized in all 21 language packs.
+
+After deployment, test the rendered site with real package data and its public URL. Navigate the primary navigation, palette and language controls, model search, package details, downloads, dialogs, and index page using only a keyboard; test desktop and mobile layouts at 200% zoom; and verify names, focus order, and status announcements with at least one common screen reader. Automated checks do not replace testing with disabled users and should not be treated alone as a legal conformance claim.
+
 ## Main differences from upstream
 
 | Area | jdel/sspks upstream | SSPKS-IMNKS |

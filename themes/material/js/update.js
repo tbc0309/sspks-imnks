@@ -98,6 +98,7 @@
 
             resetPanel();
             panel.classList.add('is-running');
+            panel.setAttribute('aria-busy', 'true');
             button.disabled = true;
             button.textContent = t('updating', 'Updating…');
 
@@ -167,6 +168,7 @@
                 .finally(function () {
                     tokenInput.value = '';
                     panel.classList.remove('is-running');
+                    panel.setAttribute('aria-busy', 'false');
                     button.disabled = false;
                     button.textContent = t('retry', 'Retry update');
                 });

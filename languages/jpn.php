@@ -8,6 +8,10 @@ return json_decode(<<<'JSON'
         "og_locale": "ja_JP"
     },
     "strings": {
+        "skip_to_content": "メインコンテンツへ移動",
+        "copy_success_announcement": "パッケージソースのURLをクリップボードにコピーしました。",
+        "copy_failure_announcement": "自動コピーに失敗しました。パッケージソースのURLを手動でコピーしてください。",
+        "update_progress": "パッケージ索引の更新状況",
         "nav_all_packages": "全パッケージ",
         "source_label": "DSM 7 パッケージ提供元",
         "source_help": "このURLをDSMのパッケージセンターにパッケージソースとして追加してください。",
@@ -71,7 +75,7 @@ return json_decode(<<<'JSON'
         "connection_ended": "更新接続が途中で切れました。",
         "request_failed": "更新要求に失敗しました。",
         "resume_message": "接続が切れました。サーバーは50件ごとに進行状況を保存します。「更新を再試行」を押すと続行できます。",
-        "footer_based_on": "オープンソースのDSM 7パッケージリポジトリ",
+        "footer_based_on": "オープンソースのDSM 7パッケージ配布サイト",
         "catalog_title": "{arch}対応パッケージ",
         "catalog_summary_models": "{model_preview}など、計{model_count}機種のSynology NASに対応。{arch}アーキテクチャ対応のDSM 7 SPKパッケージを{package_count}件収録。",
         "catalog_summary_arch": "{arch}アーキテクチャ対応のDSM 7 SPKパッケージを{package_count}件収録。",

@@ -8,12 +8,15 @@ return json_decode(<<<'JSON'
         "og_locale": "zh_CN"
     },
     "strings": {
+        "skip_to_content": "跳到主要内容",
         "nav_all_packages": "全部套件",
         "source_label": "DSM 7 套件源",
         "source_help": "复制本站地址，在DSM套件中心添加套件来源。",
         "copy_address": "复制地址",
         "copied": "已复制",
         "copy_manual": "请手动复制",
+        "copy_success_announcement": "套件源地址已复制到剪贴板。",
+        "copy_failure_announcement": "无法自动复制，请手动复制套件源地址。",
         "stats": "已收录 {models} 款机型 · {packages} 个套件",
         "language": "语言",
         "model_title": "选择群晖机型",
@@ -56,6 +59,7 @@ return json_decode(<<<'JSON'
         "password_placeholder": "输入管理密码",
         "start_update": "开始更新",
         "waiting": "等待开始",
+        "update_progress": "套件索引更新进度",
         "success": "成功",
         "failure": "失败",
         "total": "总计",

@@ -8,6 +8,10 @@ return json_decode(<<<'JSON'
         "og_locale": "ko_KR"
     },
     "strings": {
+        "skip_to_content": "주요 콘텐츠로 건너뛰기",
+        "copy_success_announcement": "패키지 소스 URL을 클립보드에 복사했습니다.",
+        "copy_failure_announcement": "자동 복사에 실패했습니다. 패키지 소스 URL을 직접 복사하세요.",
+        "update_progress": "패키지 색인 업데이트 진행률",
         "nav_all_packages": "모든 패키지",
         "source_label": "DSM 7 패키지 소스",
         "source_help": "이 URL을 복사해 DSM 패키지 센터에 패키지 소스로 추가하세요.",
@@ -33,7 +37,7 @@ return json_decode(<<<'JSON'
         "minimum_dsm": "최소 DSM 버전",
         "internal_name": "패키지 이름",
         "display_name": "표시 이름",
-        "maintainer": "관리자",
+        "maintainer": "개발자",
         "architectures": "아키텍처",
         "runtime": "실행 환경",
         "details": "상세 보기",
@@ -67,7 +71,7 @@ return json_decode(<<<'JSON'
         "updating": "업데이트 중…",
         "retry": "업데이트 재시도",
         "invalid_response": "업데이트 서비스에서 잘못된 응답을 반환했습니다.",
-        "no_stream": "이 브라우저는 스트리밍 진행률을 지원하지 않습니다.",
+        "no_stream": "이 브라우저는 실시간 진행률 표시를 지원하지 않습니다.",
         "connection_ended": "업데이트 연결이 중간에 종료되었습니다.",
         "request_failed": "업데이트 요청에 실패했습니다.",
         "resume_message": "연결이 중단되었습니다. 서버는 패키지 50개마다 진행 상황을 저장합니다. 계속하려면 ‘업데이트 재시도’를 누르세요.",

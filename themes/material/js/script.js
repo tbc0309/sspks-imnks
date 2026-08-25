@@ -26,6 +26,21 @@
         }
     }
 
+    /* Show accessibility focus indicators only during keyboard Tab navigation. */
+    function setupInputModality() {
+        var root = document.documentElement;
+        var keyboardClass = 'keyboardNavigation';
+
+        window.addEventListener('keydown', function (event) {
+            if (event.key === 'Tab') {
+                root.classList.add(keyboardClass);
+            }
+        }, true);
+        window.addEventListener('pointerdown', function () {
+            root.classList.remove(keyboardClass);
+        }, true);
+    }
+
     function setupLanguageMenu() {
         var root = document.querySelector('[data-language-menu]');
         if (!root) {
@@ -90,6 +105,11 @@
             button.textContent = expanded ? t('details', 'View details') : t('hide_details', 'Hide details');
             card.classList.toggle('is-details-expanded', !expanded);
             details.setAttribute('aria-hidden', String(expanded));
+            if (expanded) {
+                details.setAttribute('inert', '');
+            } else {
+                details.removeAttribute('inert');
+            }
             details.classList.toggle('spk-details-hidden', expanded);
         });
     }
@@ -131,6 +151,7 @@
     function setupCopyButton() {
         var button = document.querySelector('[data-copy-source]');
         var source = document.getElementById('source-url');
+        var status = document.querySelector('[data-copy-status]');
         if (!button || !source) {
             return;
         }
@@ -139,12 +160,18 @@
             copyText(source.textContent.trim())
                 .then(function () {
                     button.textContent = t('copied', 'Copied');
+                    if (status) {
+                        status.textContent = t('copy_success_announcement', 'Package source URL copied to the clipboard.');
+                    }
                     window.setTimeout(function () {
                         button.textContent = t('copy_address', 'Copy address');
                     }, 1600);
                 })
                 .catch(function () {
                     button.textContent = t('copy_manual', 'Copy manually');
+                    if (status) {
+                        status.textContent = t('copy_failure_announcement', 'Automatic copying failed. Copy the package source URL manually.');
+                    }
                 });
         });
     }
@@ -195,7 +222,6 @@
             var dots = Array.from(carousel.querySelectorAll('[data-ad-index]'));
 
             carousel.hidden = true;
-            carousel.setAttribute('aria-hidden', 'true');
             slides.forEach(function (slide) {
                 slide.hidden = true;
                 slide.classList.remove('is-active');
@@ -208,7 +234,6 @@
             if (!slides.length) {
                 afterPageLoad(function () {
                     carousel.hidden = false;
-                    carousel.setAttribute('aria-hidden', 'false');
                 });
                 return;
             }
@@ -353,7 +378,6 @@
                     .then(function () {
                         showLoadedSlide(0);
                         carousel.hidden = false;
-                        carousel.setAttribute('aria-hidden', 'false');
                         startRotation();
                     })
                     .catch(function () {
@@ -569,6 +593,8 @@
             observer.observe(loader);
         }
     }
+
+    setupInputModality();
 
     /* Page initialization */
     document.addEventListener('DOMContentLoaded', function () {

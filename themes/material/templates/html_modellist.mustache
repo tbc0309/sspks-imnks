@@ -9,12 +9,12 @@
     <label for="model-search">{{ model_search }}</label>
     <input id="model-search" type="search" placeholder="{{ model_placeholder }}" autocomplete="off" enterkeyhint="search" data-model-search>
     <div class="model-toolbar__status">
-        <span data-model-count aria-live="polite"></span>
+        <span data-model-count role="status" aria-live="polite" aria-atomic="true"></span>
         <button class="model-toggle mdl-button" type="button" aria-controls="model-grid" data-model-toggle>{{ show_all }}</button>
     </div>
 </div>
 {{# advertisementEnabled }}
-<aside class="model-ad" aria-label="{{ advertisement }}" aria-hidden="true" data-ad-carousel data-ad-interval="{{ advertisementInterval }}" hidden>
+<aside class="model-ad" aria-label="{{ advertisement }}" data-ad-carousel data-ad-interval="{{ advertisementInterval }}" hidden>
 {{# advertisementItems }}
     <a class="ad-banner" href="{{ target_url }}" target="_blank" rel="noopener noreferrer sponsored" aria-label="{{ alt }}" aria-hidden="true" data-ad-slide hidden>
         <img data-src="{{ image_url }}" alt="{{ alt }}" decoding="async" fetchpriority="low">

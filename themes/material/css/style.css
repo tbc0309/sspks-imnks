@@ -155,6 +155,35 @@ a {
     color: var(--brand-700);
 }
 
+.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    clip-path: inset(50%) !important;
+}
+
+.skip-link {
+    position: fixed;
+    z-index: 10000;
+    top: 10px;
+    left: 10px;
+    padding: 10px 16px;
+    color: #fff;
+    background: #111827;
+    border-radius: 8px;
+    font-weight: 700;
+    text-decoration: none;
+    transform: translateY(-200%);
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+}
+
 .mdl-layout {
     display: flex;
     min-height: 100vh;
@@ -304,7 +333,7 @@ a {
 }
 
 .collection-stats strong {
-    color: var(--brand-600);
+    color: #fff;
     font: inherit;
     font-variant-numeric: tabular-nums;
 }
@@ -403,10 +432,9 @@ a {
 }
 
 .language-select__menu a:hover,
-.language-select__menu a:focus-visible {
+html.keyboardNavigation .language-select__menu a:focus {
     color: var(--brand-800);
     background: var(--brand-100);
-    outline: none;
 }
 
 .language-select__menu a.is-selected {
@@ -1134,11 +1162,9 @@ a {
 .site-footer__brand p {
     max-width: 320px;
     margin: 13px 0 18px;
-    overflow: hidden;
     color: rgba(255, 255, 255, 0.62);
     line-height: 1.7;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
 }
 
 .site-footer__brand p a {
@@ -1183,7 +1209,7 @@ a {
     max-width: var(--page-max-width);
     margin: 0 auto;
     padding: 20px 24px 26px;
-    color: rgba(255, 255, 255, 0.48);
+    color: rgba(255, 255, 255, 0.57);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     font-size: 0.82rem;
 }
@@ -1226,7 +1252,7 @@ a {
 .footer-version {
     margin-left: 4px;
     padding: 4px 8px;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.57);
     background: rgba(255, 255, 255, 0.04);
     border-radius: 999px;
     font: 600 0.72rem/1.3 var(--font-mono);
@@ -1277,12 +1303,24 @@ a {
     stroke-width: 2.4;
 }
 
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible {
+html.keyboardNavigation button:focus,
+html.keyboardNavigation a:focus,
+html.keyboardNavigation input:focus,
+html.keyboardNavigation select:focus,
+html.keyboardNavigation textarea:focus,
+html.keyboardNavigation summary:focus,
+html.keyboardNavigation [tabindex]:not([tabindex='-1']):focus {
     outline: 3px solid var(--focus);
-    outline-offset: 3px;
+    outline-offset: -3px;
+    box-shadow: none;
+}
+
+html.keyboardNavigation .model-toolbar input:focus,
+html.keyboardNavigation .update-form input:focus {
+    border-color: var(--focus);
+    outline: 3px solid var(--focus);
+    outline-offset: -3px;
+    box-shadow: none;
 }
 
 /* Palette switcher and advertisements */
@@ -1394,10 +1432,10 @@ select:focus-visible {
 }
 
 .ad-carousel__dots button {
-    width: 9px;
-    height: 9px;
+    width: 24px;
+    height: 24px;
     padding: 0;
-    background: rgba(255, 255, 255, 0.5);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.62) 0 4px, transparent 5px);
     border: 0;
     border-radius: 50%;
     cursor: pointer;
@@ -1405,8 +1443,7 @@ select:focus-visible {
 
 .ad-carousel__dots button:hover,
 .ad-carousel__dots button[aria-current='true'] {
-    background: #fff;
-    transform: scale(1.2);
+    background: radial-gradient(circle, #fff 0 5px, transparent 6px);
 }
 
 /* Package cards: layout and actions */
@@ -1622,6 +1659,9 @@ select:focus-visible {
     .setup-info p {
         grid-column: 1 / -1;
         margin: 0;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
     }
 
     .page-content {
@@ -1635,8 +1675,11 @@ select:focus-visible {
 
     .page-hero h1 {
         margin: 8px 0;
-        font-size: clamp(2rem, 10vw, 2.65rem);
+        font-size: clamp(1.75rem, 8vw, 2.2rem);
         line-height: 1.2;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
     }
 
     .page-hero .eyebrow {
@@ -1645,6 +1688,9 @@ select:focus-visible {
 
     .page-hero p {
         line-height: 1.7;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
     }
 
     .page-hero::before,
@@ -1681,6 +1727,10 @@ select:focus-visible {
         margin-top: 5px;
         font-size: clamp(1.6rem, 7vw, 1.8rem);
         line-height: 1.25;
+        overflow: visible;
+        overflow-wrap: anywhere;
+        text-overflow: clip;
+        white-space: normal;
     }
 
     .list-heading .back-link {
@@ -1703,6 +1753,12 @@ select:focus-visible {
 
     .update-panel {
         padding: 22px;
+    }
+
+    .update-panel__header p {
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
     }
 
     .update-form__controls {

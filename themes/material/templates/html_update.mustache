@@ -14,12 +14,12 @@
         </div>
     </form>
 
-    <div class="update-progress" aria-live="polite">
+    <div class="update-progress">
         <div class="update-progress__meta">
-            <span data-update-status>{{ waiting }}</span>
+            <span role="status" aria-live="polite" aria-atomic="true" data-update-status>{{ waiting }}</span>
             <output data-update-percent>0%</output>
         </div>
-        <progress max="100" value="0" data-update-progress>0%</progress>
+        <progress max="100" value="0" aria-label="{{ update_progress }}" data-update-progress>0%</progress>
         <div class="update-summary">
             <span>{{ success }} <strong data-success-count>0</strong></span>
             <span>{{ failure }} <strong data-failure-count>0</strong></span>

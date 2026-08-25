@@ -8,6 +8,10 @@ return json_decode(<<<'JSON'
         "og_locale": "nl_NL"
     },
     "strings": {
+        "skip_to_content": "Naar hoofdinhoud",
+        "copy_success_announcement": "De URL van de pakketbron is naar het klembord gekopieerd.",
+        "copy_failure_announcement": "Automatisch kopiëren is mislukt. Kopieer de URL van de pakketbron handmatig.",
+        "update_progress": "Voortgang van pakketindex-update",
         "nav_all_packages": "Alle pakketten",
         "source_label": "DSM 7-PAKKETBRON",
         "source_help": "Kopieer deze URL en voeg hem als pakketbron toe in DSM Package Center.",
@@ -67,10 +71,10 @@ return json_decode(<<<'JSON'
         "updating": "Update...",
         "retry": "Opnieuw proberen",
         "invalid_response": "De update-service gaf een ongeldig antwoord terug.",
-        "no_stream": "Deze browser ondersteunt geen streamingvoortgang.",
+        "no_stream": "Deze browser toont geen live voortgang.",
         "connection_ended": "De updateverbinding werd vroegtijdig beëindigd.",
         "request_failed": "Het updateverzoek mislukte.",
-        "resume_message": "De verbinding werd verbroken. De server houdt elke 50 pakketten een checkpoint aan; klik op Opnieuw bijwerken om verder te gaan.",
+        "resume_message": "De verbinding werd verbroken. De server slaat elke 50 pakketten de voortgang op; klik op Opnieuw proberen om door te gaan.",
         "footer_based_on": "Open-source DSM 7 pakketrepository",
         "catalog_title": "{arch} beschikbare pakketten",
         "catalog_summary_models": "Ondersteunt {model_preview} en {model_count} Synology-modellen; bevat {package_count} DSM 7 SPK's voor {arch}.",

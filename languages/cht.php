@@ -8,6 +8,10 @@ return json_decode(<<<'JSON'
         "og_locale": "zh_TW"
     },
     "strings": {
+        "skip_to_content": "跳到主要內容",
+        "copy_success_announcement": "套件來源網址已複製到剪貼簿。",
+        "copy_failure_announcement": "無法自動複製，請手動複製套件來源網址。",
+        "update_progress": "套件索引更新進度",
         "nav_all_packages": "全部套件",
         "source_label": "DSM 7 套件來源",
         "source_help": "複製本站網址，在 DSM 套件中心加入套件來源。",

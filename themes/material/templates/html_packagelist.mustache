@@ -10,7 +10,7 @@
 <p class="catalog-summary">{{ catalogSummary }}</p>
 {{/ catalogSummary }}
 {{^ packagelist }}
-<div class="status-message" role="status">
+<div class="status-message">
     <h1>{{ emptyTitle }}</h1>
     <p>{{ emptyMessage }}</p>
 </div>
@@ -40,7 +40,7 @@
         </div>
         <div class="spk-compatibility">{{ cardMinimumDsm }} <strong>{{ os_min_ver }}</strong></div>
         <div class="mdl-card__supporting-text spk-description">{{ description }}</div>
-        <div class="mdl-card__supporting-text spk-details spk-details-hidden" aria-hidden="true">
+        <div class="mdl-card__supporting-text spk-details spk-details-hidden" id="package-details-{{ package }}" aria-hidden="true" inert>
             <dl>
                 <dt>{{ cardInternalName }}</dt>
                 <dd>{{ package }}</dd>
@@ -63,7 +63,7 @@
         </div>
         <div class="mdl-layout-spacer"></div>
         <div class="spk-actions mdl-card__actions">
-            <button class="mdl-button" type="button" data-toggle-details aria-expanded="false">{{ cardDetails }}</button>
+            <button class="mdl-button" type="button" data-toggle-details aria-expanded="false" aria-controls="package-details-{{ package }}">{{ cardDetails }}</button>
             <div class="spk-download">
                 <span class="spk-filesize">SPK · {{ fileSizeLabel }}</span>
 {{# downloadEnabled }}
@@ -77,8 +77,8 @@
     </article>
 {{/ packagelist }}
 </div>
-<div class="package-loader" hidden data-package-loader aria-live="polite">
-    <span data-package-progress></span>
+<div class="package-loader" hidden data-package-loader>
+    <span data-package-progress role="status" aria-live="polite" aria-atomic="true"></span>
     <button class="mdl-button mdl-button--raised" type="button" data-load-more-packages>{{ load_more }}</button>
 </div>
 <noscript>

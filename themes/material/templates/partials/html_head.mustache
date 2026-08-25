@@ -45,11 +45,12 @@
         <script>window.SSPKS_I18N = {{{ i18nJson }}};</script>
     </head>
     <body>
+        <a class="skip-link" href="#main-content">{{ skip_to_content }}</a>
         <div class="mdl-layout">
             <header class="site-header mdl-layout__header">
                 <div class="mdl-layout__header-row">
                     <a class="site-brand" href="{{ baseUrlRelative }}" aria-label="{{ siteName }}">
-                        <img src="{{ baseUrlRelative }}logo.png" alt="{{ siteName }}" width="152" height="50" decoding="async" fetchpriority="high">
+                        <img src="{{ baseUrlRelative }}logo.png" alt="" width="152" height="50" decoding="async" fetchpriority="high">
                     </a>
                     {{# headerStatistics }}
                     <span class="collection-stats">{{ headerStatisticsText }}</span>
@@ -70,11 +71,11 @@
                                     <path d="M3 12h18M12 3c2.5 2.5 3.8 5.5 3.8 9S14.5 18.5 12 21M12 3C9.5 5.5 8.2 8.5 8.2 12S9.5 18.5 12 21"></path>
                                 </svg>
                             </button>
-                            <div class="language-select__menu" id="language-menu" hidden data-language-list>
+                            <nav class="language-select__menu" id="language-menu" aria-label="{{ language }}" hidden data-language-list>
 {{# languageOptions }}
                                 <a href="{{ url }}"{{# selected }} class="is-selected" aria-current="true"{{/ selected }}>{{ name }}</a>
 {{/ languageOptions }}
-                            </div>
+                            </nav>
                         </div>
 {{/ showLanguageSelector }}
                         <nav class="site-nav" aria-label="Navigation">
@@ -83,7 +84,7 @@
                     </div>
                 </div>
             </header>
-            <main class="mdl-layout__content">
+            <main class="mdl-layout__content" id="main-content" tabindex="-1">
 {{^ hideSetupInfo }}
 {{^ arch }}
                 <div class="setup-info" id="setup-info" role="note">
@@ -93,6 +94,7 @@
                         <p>{{ source_help }}</p>
                     </div>
                     <button class="mdl-button mdl-button--raised" type="button" data-copy-source>{{ copy_address }}</button>
+                    <span class="visually-hidden" aria-live="polite" aria-atomic="true" data-copy-status></span>
                 </div>
 {{/ arch }}
 {{/ hideSetupInfo }}
