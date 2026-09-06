@@ -1,45 +1,41 @@
+armv8:
+    armada37xx:
+        - DS119j
+        - DS120j
+    rtd1296:
+        - DS118
+        - DS218
+        - DS218play
+        - DS418
+        - DS418j
+        - RS819
+        - DS220j
+        - DS420j
+    rtd1619b:
+        - DS124
+        - DS223
+        - DS223j
+        - DS423
+
 x86_64:
-    bromolow:
-        - DS3615xs
-        - RC18015xs+
-        - RS10613xs+
-        - RS10815xs+
-        - RS18016xs+
-        - RS3413xs+
-        - RS3614xs+
-        - RS3614(RP)xs
-        - RS3617xs
-    cedarview:
-        - DS1513+
-        - DS1813+
-        - DS2413+
-        - DS713+
-        - RS2414(RP)+
-        - RS814(RP)+
+    apollolake:
+        - DS218+
+        - DS418play
+        - DS718+
+        - DS918+
+        - DS1019+
+        - DS620slim
     avoton:
         - DS415+
         - DS1515+
-        - DS1517+
         - DS1815+
-        - DS1817+
         - DS2415+
         - RS815(RP)+
+        - RS2416(RP)+
+        - DS1517+
+        - DS1817+
         - RS818(RP)+
         - RS1219+
-        - RS2416(RP)+
-    grantley:
-        - FS3017
-    broadwell:
-        - DS3617xs
-        - DS3617xsII
-        - FS2017
-        - FS3400
-        - RS1619xs+
-        - RS18017xs+
-        - RS3617xs+
-        - RS3617RPxs
-        - RS3618xs
-        - RS4017xs+
     braswell:
         - DS216+
         - DS216+II
@@ -47,37 +43,68 @@ x86_64:
         - DS716+
         - DS716+II
         - DS916+
-    apollolake:
-        - DS1019+
-        - DS218+
-        - DS418play
-        - DS620slim
-        - DS718+
-        - DS918+
-    denverton:
-        - DS1618+
-        - DS1819+
-        - DS2419+
-        - DS2419+II
-        - DVA3219
-        - DVA3221
-        - RS2418(RP)+
-        - RS2818RP+
-        - RS820(RP)+
+    broadwell:
+        - DS3617xs
+        - FS2017
+        - RS18017xs+
+        - RS3617RPxs
+        - RS3617xs+
+        - RS4017xs+
+        - DS3617xsII
+        - RS3618xs
+        - RS1619xs+
+        - FS3400
     broadwellnk:
-        - DS1621xs+
         - DS3018xs
-        - DS3622xs+
         - FS1018
+        - SA3400
         - FS3600
+        - SA3600
+        - DS1621xs+
         - RS3621RPxs
         - RS3621xs+
         - RS4021xs+
-        - SA3400
-        - SA3600
+        - DS3622xs+
+    broadwellnkv2:
+        - FS3410
+        - SA3410
+        - SA3610
     broadwellntbap:
-        - SA3200D
         - SA3400D
+        - SA3200D
+    bromolow:
+        - RS10613xs+
+        - RS3413xs+
+        - RS3614(RP)xs
+        - RS3614xs+
+        - DS3615xs
+        - RC18015xs+
+        - RS10815xs+
+        - RS18016xs+
+        - RS3617xs
+    cedarview:
+        - DS713+
+        - DS1513+
+        - DS1813+
+        - DS2413+
+        - RS814(RP)+
+        - RS2414(RP)+
+    denverton:
+        - DS1618+
+        - RS2418(RP)+
+        - RS2818RP+
+        - DS1819+
+        - DS2419+
+        - DVA3219
+        - DS2419+II
+        - RS820(RP)+
+        - DVA3221
+    epyc7002:
+        - SA6400
+    epyc7003:
+        - FS6420
+        - PAS7700
+        - RS11626xs+
     geminilake:
         - DS220+
         - DS420+
@@ -88,71 +115,51 @@ x86_64:
         - DS423+
         - DS224+
         - DS225+
-    v1000:
-        - DS1621+
-        - DS1821+
-        - DS2422+
-        - RS1221(RP)+
-        - RS2421(RP)+
-        - RS2821RP+
-        - RS822(RP)+
-        - FS2500
-        - DS1823xs+
-        - RS2423(RP)+
-        - RS826(RP)+
+    geminilakenk:
+        - DS425+
+        - DS625slim
+        - FS200T
+    grantley:
+        - FS3017
+    icelaked:
+        - FS3420
+        - RS1626xs+
+        - RS3626xs
+        - RS4826xs+
+        - RS6426xs+
+    kvmx64:
+        - VirtualDSM
+    purley:
+        - FS6400
+        - HD6500
     r1000:
         - DS1522+
         - RS422+
         - DS723+
         - DS923+
-    purley:
-        - FS6400
-        - HD6500
-    broadwellnkv2:
-        - FS3410
-        - SA3410
-        - SA3610
-    geminilakenk:
-        - DS425+
-        - DS625slim
+    r1000nk:
+        - DS725+
+        - DS725neo+
+    v1000:
+        - DS1621+
+        - DS1821+
+        - RS1221(RP)+
+        - RS2421(RP)+
+        - RS2821RP+
+        - DS2422+
+        - FS2500
+        - RS822(RP)+
+        - DS1823xs+
+        - RS2423(RP)+
+        - RS826(RP)+
     v1000nk:
+        - RS2423RP+II
         - DS925+
         - DS1525+
         - DS1825+
         - DS1825xs+
         - RS2825RP+
-        - RS2423RP+II
-    r1000nk:
-        - DS725+
-    epyc7002:
-        - SA6400
-    epyc7003:
-        - PAS7700
-        - FS6420
-    icelaked:
-        - RS6426xs+
-        - RS4826xs+
-        - RS3626xs
-        - RS1626xs+
-        - FS3420
-    kvmx64:
-        - VirtualDSM
-
-armv8:
-    rtd1296:
-        - DS118
-        - DS218
-        - DS218play
-        - DS220j
-        - DS418j
-        - DS418
-        - DS420j
-        - RS819
-    armada37xx:
-        - DS119j
-        - DS120j
-    rtd1619b:
-        - DS124
-        - DS223
-        - DS223j
-        - DS423
+        - RS1226(RP)+
+        - DS925neo+
+        - DS1525neo+
+        - DS1825neo+
