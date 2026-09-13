@@ -116,6 +116,7 @@ final class SynologyHandler extends AbstractHandler
             $firmwareVersion,
             $channel,
             $language,
+            'dsm-build-selection-v2',
             $this->config->baseUrl,
             $this->config->packages,
             is_file($modelsFile) ? (int) filemtime($modelsFile) : 0,

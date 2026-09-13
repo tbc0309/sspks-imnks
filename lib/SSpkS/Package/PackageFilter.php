@@ -149,7 +149,7 @@ final class PackageFilter
                 }
 
                 $packageName = (string) $package->package;
-                if (!isset($result[$packageName]) || Package::comparePackageVersions((string) $package->version, (string) $result[$packageName]->version) > 0) {
+                if (!isset($result[$packageName]) || $this->isPreferredPackage($package, $result[$packageName])) {
                     $result[$packageName] = $package;
                 }
             } catch (\Throwable $e) {
@@ -158,6 +158,19 @@ final class PackageFilter
         }
 
         return $this->filterOldVersions ? array_values($result) : $result;
+    }
+
+    private function isPreferredPackage(Package $candidate, Package $current): bool
+    {
+        $versionComparison = Package::comparePackageVersions((string) $candidate->version, (string) $current->version);
+        if ($versionComparison !== 0) {
+            return $versionComparison > 0;
+        }
+
+        // For equal package versions, prefer the highest minimum DSM version supported by the client.
+        // Browser requests do not specify DSM versions, so preserve their existing selection behavior.
+        return $this->filterOsVersion !== null
+            && Package::compareDsmVersions((string) $candidate->os_min_ver, (string) $current->os_min_ver) > 0;
     }
 
     private function unserializePackage(string $serialized): Package
