@@ -1,53 +1,53 @@
 # SSPKS-IMNKS
 
-[English](README.md) | [简体中文](README.zh-CN.md)
+[English](README.en.md) | [简体中文](README.md)
 
-A multilingual, self-hosted SPK package repository for Synology DSM 7, derived from [jdel/sspks](https://github.com/jdel/sspks).
+SSPKS-IMNKS 是一个面向 Synology DSM 7 的多语言自建 SPK 套件源，衍生自 [jdel/sspks](https://github.com/jdel/sspks)。
 
-**Live site:** Visit [spk7.imnks.com](https://spk7.imnks.com/) to see the original SSPKS-IMNKS deployment maintained by the project author.
+**原始站点：** 访问 [spk7.imnks.com](https://spk7.imnks.com/) 查看项目作者维护的 SSPKS-IMNKS 实际运行站点。
 
-![SSPKS-IMNKS demo](docs/images/sspks-imnks-demo.png)
+![SSPKS-IMNKS 演示界面](docs/images/sspks-imnks-demo.png)
 
-## Why this edition
+## 版本特色
 
-- 21 complete UI languages with browser detection, an optional fixed default, and remembered visitor selection.
-- Simplified Chinese and English are maintained directly; all other language packs are AI-translated and may require native-speaker review.
-- MySQL/MariaDB and SQLite3 backends. SQLite is the demonstration default and is usually the simpler choice for a repository with only a few hundred packages.
-- Responsive Material interface with four palettes, model search, priority models, progressive package cards, runtime badges, Synology branding, configurable footer links, and an advertisement carousel.
-- DSM 7 metadata validation, guarded SPK archive reading, model/architecture filtering, and localized package descriptions.
-- Resumable index refreshes with checkpoints every 50 packages and streamed MD5 reads in 8 MiB chunks.
-- Transactional index replacement: a failed database write preserves the previous index.
-- Generated WebP browser thumbnails and optional obfuscation of image and SPK download URLs.
+- 21 种完整界面语言，支持浏览器识别、固定首次默认语言和 Cookie 记忆切换结果。
+- 简体中文和英文由项目直接维护，其余语言由 AI 翻译，可能仍需母语使用者审校。
+- 同时支持 MySQL/MariaDB 与 SQLite3。演示配置默认使用 SQLite；只有几百个套件时通常更简单合适。
+- Material 响应式界面，包含 4 套配色、机型搜索、优先机型、套件卡片渐进加载、运行环境标识、Synology 标志、可配置页脚和广告轮播。
+- DSM 7 元数据校验、安全读取 SPK 归档、机型/架构筛选和多语言套件说明。
+- 索引更新每处理 50 个套件保存检查点，MD5 使用 8 MiB 流式分块读取，可在连接中断后继续。
+- MySQL/MariaDB 和 SQLite 均以事务替换索引，写入失败时保留原索引。
+- 自动生成 WebP 网页缩略图，可选混淆图片和 SPK 下载地址。
 
-## Requirements
+## 环境要求
 
-- PHP 7.4 or later
-- PHP extensions: `json`, `pdo`, `phar`, plus `pdo_sqlite` and/or `pdo_mysql`
-- A web server with PHP-FPM or equivalent
-- Write access to `cache/` and `runtime/`
+- PHP 7.4 或更高版本
+- PHP 扩展：`json`、`pdo`、`phar`，以及 `pdo_sqlite` 和/或 `pdo_mysql`
+- PHP-FPM 或同类 PHP Web 环境
+- PHP 对 `cache/`、`runtime/` 具有写权限
 
-The committed `vendor/` directory was installed for PHP 7.4 and is ready for a PHP 7.4 deployment. For another PHP version, rebuild it on that runtime:
+仓库内的 `vendor/` 已使用 PHP 7.4 拉取，可直接用于 PHP 7.4。其他 PHP 版本请在对应环境重新执行：
 
 ```bash
 composer install --no-dev --classmap-authoritative --no-interaction
 ```
 
-## Quick start
+## 快速部署
 
-1. Copy the project to the web root.
-2. Edit `conf/sspks.yaml` and `conf/database.yaml`.
-3. Change the example URL and both management/database passwords before going online.
-4. Put DSM 7 `.spk` files in `packages/`.
-5. Make `cache/` and `runtime/` writable by PHP.
-6. Change `update.action`, open `/?action={configured-action}`, and enter the management password.
+1. 将项目复制到网站目录。
+2. 修改 `conf/sspks.yaml` 和 `conf/database.yaml`。
+3. 上线前更换演示网址、管理密码和数据库密码。
+4. 将 DSM 7 `.spk` 文件放入 `packages/`。
+5. 赋予 PHP 对 `cache/`、`runtime/` 的写权限。
+6. 修改 `update.action`，访问 `/?action={配置值}`，输入管理密码更新索引。
 
-SQLite creates its schema automatically. For MySQL/MariaDB, import `wd_spk2.sql`. An SQLite schema reference is provided in `wd_spk2.sqlite.sql`.
+SQLite 会自动创建表结构；MySQL/MariaDB 请导入 `wd_spk2.sql`。`wd_spk2.sqlite.sql` 是 SQLite 表结构参考。
 
-> **Index refresh memory:** Refreshing the package index reads and parses SPK metadata, calculates file hashes, and temporarily holds data before it is written to the database. Memory usage can be significant when the repository contains many packages. Set PHP's `memory_limit` to at least `1024M`, either temporarily for the refresh or permanently, to prevent an out-of-memory interruption. Web refreshes use the PHP-FPM configuration, while command-line refreshes use the CLI configuration; these may load different `php.ini` files. Reload or restart PHP-FPM after changing its permanent configuration.
+> **索引更新内存提醒：** 更新套件索引需要读取并解析 SPK 元数据、计算文件哈希并暂存待写入的数据，套件数量较多时会占用较多 PHP 内存。建议将执行更新任务的 PHP `memory_limit` 临时或永久设置为至少 `1024M`，否则任务可能因内存耗尽而在完成前中断。通过网页更新时请检查 PHP-FPM 的配置，通过命令行更新时请检查 CLI PHP 的配置；两者可能使用不同的 `php.ini`。修改永久配置后请重载或重启对应的 PHP-FPM 服务。
 
-## Recommended Nginx configuration
+## 推荐的 Nginx 配置
 
-The application handles its own friendly 404 page. Nginx must therefore send requests for files that do not exist to `index.php` while continuing to serve real static assets directly. The example below also blocks sensitive source/configuration paths and provides the internal download location required when browser SPK URL obfuscation is enabled.
+项目已经包含自己的 404 页面，因此 Nginx 应把不存在的文件交给 `index.php`，真实静态资源仍由 Nginx 直接提供。下面的示例同时保护配置、源码、依赖和运行数据，并提供浏览器 SPK 地址混淆所需的内部下载位置。
 
 ```nginx
 server {
@@ -56,13 +56,12 @@ server {
     root /var/www/sspks-imnks;
     index index.php;
 
-    # Existing assets are served directly; every unknown URL reaches the
-    # application router so SSPKS-IMNKS can render its own 404 page.
+    # 真实文件直接返回；未知地址交给程序路由并显示项目自带的 404 页面。
     location / {
         try_files $uri $uri/ /index.php?$query_string;
     }
 
-    # Only the front controller may execute PHP.
+    # 只允许入口文件执行 PHP。
     location = /index.php {
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root/index.php;
@@ -74,15 +73,15 @@ server {
         return 404;
     }
 
-    # Required by X-Accel-Redirect for obfuscated browser downloads.
-    # Keep this internal and make the alias match paths.packages.
+    # 浏览器下载地址混淆使用 X-Accel-Redirect；必须保持 internal。
+    # alias 要与 conf/sspks.yaml 中的 paths.packages 对应。
     location ^~ /_sspks_download/ {
         internal;
         alias /var/www/sspks-imnks/packages/;
         default_type application/octet-stream;
     }
 
-    # Never expose application source, dependencies, configuration, or runtime data.
+    # 禁止公开访问配置、源码、依赖和运行数据。
     location ~ ^/(?:conf|languages|lib|runtime|vendor)(?:/|$) {
         deny all;
     }
@@ -99,8 +98,7 @@ server {
         deny all;
     }
 
-    # SPK files must remain reachable by DSM Package Center. Disable listing,
-    # but do not block the packages directory itself.
+    # DSM 套件中心需要访问 SPK 文件，因此不要封锁 packages 目录，只关闭目录列表。
     location ^~ /packages/ {
         autoindex off;
         try_files $uri =404;
@@ -111,66 +109,66 @@ server {
 }
 ```
 
-Replace the domain, project root, PHP-FPM socket, and package alias for your server. If the project is installed below a URL prefix instead of the domain root, also adjust `site.base_url` and the matching Nginx locations. Test with `nginx -t` before reloading Nginx. Do not use `error_page 404 /index.php`; `try_files` lets the application distinguish its own routes and render the bundled 404 page correctly.
+请按服务器实际情况修改域名、项目目录、PHP-FPM Socket 和套件目录 alias。如果项目部署在域名的子目录，还要同步调整 `site.base_url` 和对应的 Nginx location。重载前先执行 `nginx -t`。不要使用 `error_page 404 /index.php`；这里的 `try_files` 能让程序正确识别路由并显示项目自带的 404 页面。
 
-## Configuration notes
+## 重要配置
 
-### Language
+### 语言
 
-Set `language.fixed` in `conf/sspks.yaml` for the first visit. Leave it blank to detect the browser language and fall back to English. When `language.show_selector` is `true`, visitors may switch language and the choice is remembered in a cookie. When it is `false`, the selector is hidden and the configured language is enforced.
+`conf/sspks.yaml` 中的 `language.fixed` 决定首次访问语言；留空时根据浏览器语言自动选择，无法匹配则使用英文。`language.show_selector: true` 时允许访客切换并用 Cookie 记住；设为 `false` 时隐藏选择器并强制使用配置语言。
 
-Supported codes: `chs`, `cht`, `csy`, `dan`, `enu`, `fre`, `ger`, `hun`, `ita`, `jpn`, `krn`, `nld`, `nor`, `plk`, `ptb`, `ptg`, `rus`, `spn`, `sve`, `tha`, and `trk`.
+支持：`chs`、`cht`、`csy`、`dan`、`enu`、`fre`、`ger`、`hun`、`ita`、`jpn`、`krn`、`nld`、`nor`、`plk`、`ptb`、`ptg`、`rus`、`spn`、`sve`、`tha`、`trk`。
 
-### Public URL and robots.txt
+### 网站地址与 robots.txt
 
-The included configuration intentionally uses `https://packages.example.com/`. Before deployment, replace it in `conf/sspks.yaml` and update the `Sitemap` line in `robots.txt` to your actual public domain. Keeping the example value is safe but prevents search engines from discovering the correct sitemap.
+演示配置统一使用 `https://packages.example.com/`。正式部署前，请在 `conf/sspks.yaml` 替换为您的公开网址，同时将 `robots.txt` 的 `Sitemap` 改成真实域名。保留示例值不会泄露个人网站，但搜索引擎也无法发现正确的站点地图。
 
-### Private refresh action
+### 私有索引更新参数
 
-Set `update.action` in `conf/sspks.yaml` to a hard-to-guess URL-safe value, then open `https://your-domain/?action={configured-action}` to refresh the index. The value must contain 3–128 letters, numbers, dots, underscores, or hyphens. Only the configured action is accepted. This reduces routine discovery of the management page, while the management password and authentication rate limit remain the primary protections.
+在 `conf/sspks.yaml` 设置不易猜测的 `update.action`，然后访问 `https://您的域名/?action={配置值}` 更新索引。该值必须为 3–128 位，只能包含字母、数字、点、下划线和连字符，系统仅接受配置值。自定义参数可减少管理页被常规扫描发现的机会，管理密码和认证频率限制仍是主要防护。
 
-### Database
+### 数据库选择
 
-SQLite is convenient for small and medium repositories because it needs no separate database server, keeps data in one ignored runtime file, and has a smaller administration surface. MySQL/MariaDB remains useful for remote database hosting, centralized backups, monitoring, or heavier concurrent workloads.
+SQLite 无需单独运行数据库服务，数据集中在一个已被 Git 忽略的运行时文件中，维护和暴露面更小，适合中小型套件源。需要远程数据库、集中备份监控或更高并发时，可选择 MySQL/MariaDB。
 
-## Download count limitation
+## 下载计数尚未完成
 
-Download counting is **not implemented**. The Synology Package Center response currently contains demonstration values only:
+下载计数目前只是演示值：
 
-- `download_count`: `2026`
-- `recent_download_count`: `0`
+- `download_count`：`2026`
+- `recent_download_count`：`0`
 
-Their initial values are hard-coded in `lib/SSpkS/Output/JsonOutput.php`, inside `packageToJson()`. They are not stored, incremented, deduplicated, or calculated over a time window. Change those two values there if different placeholders are required; do not present them as real statistics.
+初始值位于 `lib/SSpkS/Output/JsonOutput.php` 的 `packageToJson()`。它们不会写入数据库、不会在下载后增加，也没有访客去重或时间窗口统计。若需更换占位数字，请直接修改这两个值，不要将其当作真实下载量。
 
-## Security checklist
+## 安全检查
 
-- Replace all example URLs and passwords.
-- Block direct HTTP access to `conf/`, `lib/`, `vendor/`, `runtime/`, and template sources.
-- Keep SQLite files and refresh checkpoints under `runtime/`; these are excluded by `.gitignore`.
-- Do not expose MySQL/MariaDB directly to the public internet.
-- Review every third-party SPK and its license before publication.
-- Keep generated cache files, databases, logs, `.env`, and `.spk` packages out of Git.
+- 更换全部示例网址与密码。
+- 禁止通过 HTTP 直接访问 `conf/`、`lib/`、`vendor/`、`runtime/` 和模板源码。
+- SQLite 数据库与更新检查点保存在 `runtime/`；这些文件已被 `.gitignore` 排除。
+- 不要把 MySQL/MariaDB 直接暴露到公网。
+- 发布第三方 SPK 前检查来源、安全性及其许可证。
+- 不要提交缓存、数据库、日志、`.env` 和 `.spk` 文件。
 
-## Accessibility
+## 无障碍支持
 
-The Material interface targets WCAG 2.2 Level AA. It includes a skip link, visible keyboard focus, semantic landmarks and labels, accessible expandable package details, screen-reader status announcements, touch-friendly controls, reduced-motion support, and contrast-aware light and dark palettes. Accessibility announcements introduced by this project are localized in all 21 language packs.
+Material 界面以 WCAG 2.2 AA 为无障碍设计目标，包含跳到主要内容、键盘焦点提示、语义化页面地标和标签、可访问的套件详情展开、读屏状态播报、适合触控的操作区域、减少动画偏好以及兼顾对比度的深浅配色。本项目新增的无障碍提示已覆盖全部 21 种语言包。
 
-After deployment, test the rendered site with real package data and its public URL. Navigate the primary navigation, palette and language controls, model search, package details, downloads, dialogs, and index page using only a keyboard; test desktop and mobile layouts at 200% zoom; and verify names, focus order, and status announcements with at least one common screen reader. Automated checks do not replace testing with disabled users and should not be treated alone as a legal conformance claim.
+部署后仍应使用真实套件数据和公开网址检查最终页面：仅使用键盘操作主要导航、配色和语言切换、机型搜索、套件详情、下载、弹窗及索引更新页；在桌面与手机布局下放大至 200%；至少使用一种常见屏幕阅读器核对控件名称、焦点顺序和动态提示。自动化检查不能代替残障用户测试，也不应单独作为法律意义上的完整合规声明。
 
-## Main differences from upstream
+## 相比上游 jdel/sspks
 
-| Area | jdel/sspks upstream | SSPKS-IMNKS |
+| 项目 | jdel/sspks 上游 | SSPKS-IMNKS |
 | --- | --- | --- |
-| Target | General SSPKS base | DSM 7-focused validation and presentation |
-| Database | No database; package metadata is read from files | MySQL/MariaDB and SQLite3 index backends |
-| Languages | Upstream language set | 21 UI language packs and persistent switching |
-| Interface | Original theme | Responsive Material UI, palettes, model tools, ads, configurable footer |
-| Refresh | Standard indexing | Streaming hash reads, progress events, checkpoints, resume support |
-| Browser assets | Direct package assets | Generated WebP thumbnails and optional URL obfuscation |
-| PHP 7.4 deployment | Composer installation required | Prebuilt PHP 7.4 `vendor/` included |
+| 目标 | 通用 SSPKS 基础 | 面向 DSM 7 的校验与展示 |
+| 数据库 | 不使用数据库，直接从文件读取套件信息 | MySQL/MariaDB 与 SQLite3 索引后端 |
+| 多语言 | 上游语言方案 | 21 种界面语言与记忆切换；非中英文由 AI 翻译 |
+| 界面 | 原版主题 | Material 响应式界面、配色、机型工具、广告、可配置页脚 |
+| 索引更新 | 标准索引流程 | 流式校验、实时进度、检查点与断点继续 |
+| 网页资源 | 直接使用套件资源 | WebP 缩略图与可选地址混淆 |
+| PHP 7.4 | 需要 Composer 安装 | 已包含 PHP 7.4 生成的 `vendor/` |
 
-This is a derivative project, not a drop-in patch set. Review configuration and database migration requirements before replacing an existing installation.
+本项目是衍生版本，不是可直接覆盖上游的补丁集。替换现有部署前请检查配置与数据库迁移要求。
 
-## License and credits
+## 许可与致谢
 
-Derived from [jdel/sspks](https://github.com/jdel/sspks). Distributed under [GNU GPL v3](LICENSE) (`GPL-3.0-only`). Third-party SPK packages retain their own licenses.
+本项目衍生自 [jdel/sspks](https://github.com/jdel/sspks)，以 [GNU GPL v3](LICENSE)（`GPL-3.0-only`）发布。第三方 SPK 套件仍遵循各自许可证。
