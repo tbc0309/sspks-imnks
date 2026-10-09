@@ -11,7 +11,7 @@ use think\facade\Cache;
 final class SynologyHandler extends AbstractHandler
 {
     private const RESPONSE_CACHE_TTL = 3600;
-    private const RESPONSE_CACHE_SLOTS = 128;
+    private const RESPONSE_CACHE_SLOTS = 4096;
 
     public function canHandle(): bool
     {
@@ -82,7 +82,7 @@ final class SynologyHandler extends AbstractHandler
         header('X-Content-Type-Options: nosniff');
         $firmwareVersion = $major . '.' . $minor . '-' . $build;
         $cacheSignature = $this->responseCacheSignature($unique, $arch, $firmwareVersion, $channel, $language);
-        $cacheKey = 'synology_response_v1_' . (hexdec(substr($cacheSignature, 0, 2)) % self::RESPONSE_CACHE_SLOTS);
+        $cacheKey = 'synology_response_v2_' . (hexdec(substr($cacheSignature, 0, 4)) % self::RESPONSE_CACHE_SLOTS);
         $cachedResponse = $this->cachedResponse($cacheKey, $cacheSignature);
         if ($cachedResponse !== null) {
             echo $cachedResponse;

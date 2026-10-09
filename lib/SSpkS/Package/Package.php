@@ -22,6 +22,8 @@ use SSpkS\Config;
  * @property array $snapshot
  * @property array $snapshot_url
  * @property bool $beta
+ * @property bool $official
+ * @property bool $run_as_root
  * @property string $os_min_ver
  * @property string $os_max_ver
  * @property array $exclude_arch
@@ -39,6 +41,7 @@ use SSpkS\Config;
  */
 class Package
 {
+    public const CACHE_VERSION = 3;
     private Config $config;
     private string $filepath;
     private string $filepathNoExt;
@@ -48,9 +51,14 @@ class Package
     private string $wizfile;
     private string $nowizfile;
     private ?array $metadata = null;
+    private const MAX_INFO_BYTES = 4 * 1024 * 1024;
+    private const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
     private bool $archiveValidated = false;
+    private static ?string $parserFingerprint = null;
+    private ?SynologyArchiveReader $synologyArchive = null;
+    private ?bool $synologyEncrypted = null;
 
-    public function __construct(Config $config, string $filename)
+    public function __construct(Config $config, string $filename, ?string $sourceMd5 = null)
     {
         $this->config = $config;
         if (!preg_match('/\.spk$/i', $filename)) {
@@ -69,23 +77,29 @@ class Package
         if (!is_dir(dirname($this->metafile)) && !mkdir(dirname($this->metafile), 0770, true)) {
             throw new \RuntimeException('Unable to create package cache directory');
         }
-        $packageMtime = filemtime($this->filepath);
-        if ($packageMtime === false) {
-            throw new \RuntimeException('Unable to read package file modification time');
+        $sourceMd5 ??= md5_file($this->filepath);
+        if (!is_string($sourceMd5) || preg_match('/^[a-f0-9]{32}$/D', $sourceMd5) !== 1) {
+            throw new \RuntimeException('Cannot fingerprint the package source');
         }
-        if (file_exists($this->metafile) && filemtime($this->metafile) < $packageMtime) {
-            $staleFiles = array_merge(
-                [$this->metafile, $this->wizfile, $this->nowizfile],
+        $fingerprintFile = $this->filepathNoExt . '.source';
+        self::$parserFingerprint ??= (string) self::CACHE_VERSION;
+        $fingerprint = hash('sha256', 'package-cache-v2|' . $sourceMd5 . '|' . self::$parserFingerprint);
+        $cachedFingerprint = is_file($fingerprintFile) ? trim((string) file_get_contents($fingerprintFile, false, null, 0, 128)) : '';
+        if (!hash_equals($fingerprint, $cachedFingerprint)) {
+            $staleFiles = array_merge([$this->metafile, $this->wizfile, $this->nowizfile],
                 glob($this->filepathNoExt . '_thumb_*.png') ?: [],
-                glob($this->filepathNoExt . '_screen_*.png') ?: []
-            );
+                glob($this->filepathNoExt . '_screen_*.png') ?: []);
             foreach ($staleFiles as $staleFile) {
-                if (is_file($staleFile)) {
-                    @unlink($staleFile);
+                if (is_file($staleFile) && !unlink($staleFile)) {
+                    throw new \RuntimeException('Cannot invalidate package cache');
                 }
             }
         }
         $this->collectMetadata();
+        $this->metadata['md5'] = $sourceMd5;
+        if (file_put_contents($fingerprintFile, $fingerprint, LOCK_EX) === false) {
+            throw new \RuntimeException('Cannot save package source fingerprint');
+        }
     }
 
     public function __get(string $name)
@@ -180,11 +194,13 @@ class Package
 
         $this->metadata['beta'] = $this->isBeta();
 
+        $this->metadata['official'] = $this->isSynologyEncryptedArchive();
+        $this->metadata['run_as_root'] = $this->runsAsRoot();
         $qValue = !$this->hasWizardDir();
         $this->metadata['thumbnail'] = $this->getThumbnails();
         $this->metadata['snapshot'] = $this->getSnapshots();
         foreach (['qinst', 'qupgrade', 'qstart'] as $quickProperty) {
-            $this->metadata[$quickProperty] = !empty($this->metadata[$quickProperty]) ? $this->parseBool($this->metadata[$quickProperty]) : $qValue;
+            $this->metadata[$quickProperty] = array_key_exists($quickProperty, $this->metadata) ? $this->parseBool($this->metadata[$quickProperty]) : $qValue;
         }
     }
 
@@ -194,6 +210,10 @@ class Package
      */
     private function parseInfoFile(string $filename): array
     {
+        $size = filesize($filename);
+        if ($size === false || $size > self::MAX_INFO_BYTES) {
+            throw new \RuntimeException('Package INFO exceeds the size limit');
+        }
         $content = file_get_contents($filename);
         if ($content === false) {
             throw new \RuntimeException('Unable to read INFO from package: ' . $this->filename);
@@ -293,6 +313,72 @@ class Package
         return $this->metadata;
     }
 
+    private function runsAsRoot(): bool
+    {
+        foreach ($this->metadata as $field => $value) {
+            if (stripos((string) $field, 'description') !== 0 || !is_scalar($value)) {
+                continue;
+            }
+            $description = (string) $value;
+            if (stripos($description, 'root权限') !== false || stripos($description, 'root privileges') !== false) {
+                return true;
+            }
+        }
+
+        if ($this->isSynologyEncryptedArchive()) {
+            try {
+                $archive = $this->getSynologyArchive();
+                $entries = $archive->listEntries();
+                if (!isset($entries['conf/privilege']) || $entries['conf/privilege']['size'] > 1024 * 1024) {
+                    return false;
+                }
+                $temporary = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'sspks-privilege-' . bin2hex(random_bytes(8));
+                try {
+                    $archive->extractEntry('conf/privilege', $temporary);
+                    $content = file_get_contents($temporary);
+                    if ($content === false) {
+                        return false;
+                    }
+                } finally {
+                    @unlink($temporary);
+                }
+                if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
+                    $content = substr($content, 3);
+                }
+                $privilege = json_decode($content, true);
+                return is_array($privilege)
+                    && strtolower(trim((string) ($privilege['defaults']['run-as'] ?? ''))) === 'root';
+            } catch (\Throwable $e) {
+                return false;
+            }
+        }
+
+        try {
+            $archive = $this->openArchive();
+            if (!isset($archive['conf/privilege'])) {
+                return false;
+            }
+            $entry = $archive['conf/privilege'];
+            if (!$entry->isFile() || $entry->isLink()) { return false; }
+            if ($entry->getSize() > 1024 * 1024) {
+                error_log('[SSpkS] ' . $this->filename . ' 中的 conf/privilege 大小异常');
+                return false;
+            }
+            $content = $entry->getContent();
+        } catch (\Throwable $e) {
+            return false;
+        }
+        if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
+            $content = substr($content, 3);
+        }
+        $privilege = json_decode($content, true);
+        if (!is_array($privilege)) {
+            error_log('[SSpkS] 无法解析 ' . $this->filename . ' 中的 conf/privilege');
+            return false;
+        }
+        return strtolower(trim((string) ($privilege['defaults']['run-as'] ?? ''))) === 'root';
+    }
+
     public function extractIfMissing(string $inPkgName, string $targetFile): bool
     {
         if (file_exists($targetFile)) {
@@ -300,8 +386,25 @@ class Package
         }
         $tmp_dir = sys_get_temp_dir();
         self::ensureAvailableSpace($tmp_dir, 'TMP');
+        if ($this->isSynologyEncryptedArchive()) {
+            self::ensureAvailableSpace(dirname($targetFile), 'Package cache');
+            $archive = $this->getSynologyArchive();
+            $entry = $archive->listEntries()[$inPkgName] ?? null;
+            $limit = $inPkgName === 'INFO' ? self::MAX_INFO_BYTES : self::MAX_IMAGE_BYTES;
+            if ($entry === null || $entry['size'] > $limit) {
+                throw new \RuntimeException('Archive entry is absent or exceeds the extraction limit');
+            }
+            return $archive->extractEntry($inPkgName, $targetFile);
+        }
         self::ensureAvailableSpace(dirname($targetFile), 'Package cache');
         $p = $this->openArchive();
+        if (!isset($p[$inPkgName]) || !$p[$inPkgName]->isFile() || $p[$inPkgName]->isLink()) {
+            throw new \RuntimeException('Missing or unsafe archive entry: ' . $inPkgName);
+        }
+        $limit = $inPkgName === 'INFO' ? self::MAX_INFO_BYTES : self::MAX_IMAGE_BYTES;
+        if ($p[$inPkgName]->getSize() > $limit) {
+            throw new \RuntimeException('Archive entry exceeds the size limit: ' . $inPkgName);
+        }
         $workDir = $tmp_dir . DIRECTORY_SEPARATOR . 'sspks-' . bin2hex(random_bytes(8));
         if (!mkdir($workDir, 0700)) {
             throw new \RuntimeException('Unable to create temporary extraction directory');
@@ -339,9 +442,15 @@ class Package
             return false;
         }
 
+        if ($this->isSynologyEncryptedArchive()) {
+            $hasWizard = $this->getSynologyArchive()->hasDirectory('WIZARD_UIFILES');
+            touch($hasWizard ? $this->wizfile : $this->nowizfile);
+            return $hasWizard;
+        }
+
         $p = $this->openArchive();
         foreach ($p as $file) {
-            if (substr($file, strrpos($file, '/') + 1) === 'WIZARD_UIFILES') {
+            if ($file->getFilename() === 'WIZARD_UIFILES') {
                 touch($this->wizfile);
                 return true;
             }
@@ -362,6 +471,22 @@ class Package
         } catch (\UnexpectedValueException $e) {
             throw new \Exception('Package file is not readable: ' . $this->filepath, 0, $e);
         }
+    }
+
+    private function isSynologyEncryptedArchive(): bool
+    {
+        if ($this->synologyEncrypted === null) {
+            $this->synologyEncrypted = SynologyArchiveReader::supports($this->filepath);
+        }
+        return $this->synologyEncrypted;
+    }
+
+    private function getSynologyArchive(): SynologyArchiveReader
+    {
+        if ($this->synologyArchive === null) {
+            $this->synologyArchive = new SynologyArchiveReader($this->filepath);
+        }
+        return $this->synologyArchive;
     }
 
     public function getThumbnails(string $pathPrefix = ''): array
@@ -412,7 +537,9 @@ class Package
             }
         }
         $snapshots = [];
-        foreach (glob($this->filepathNoExt . '*_screen_*.png') ?: [] as $snapshot) {
+        $files = glob($this->filepathNoExt . '_screen_*.png') ?: [];
+        natsort($files);
+        foreach ($files as $snapshot) {
             $snapshots[] = $pathPrefix . $snapshot;
         }
         return $snapshots;

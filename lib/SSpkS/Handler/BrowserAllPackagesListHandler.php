@@ -33,7 +33,7 @@ final class BrowserAllPackagesListHandler extends AbstractHandler
             $packages = $catalog->getAll();
             $packageCount = count($packages);
             $output->setVariable('packagelist', $packages);
-            $output->setVariable('catalogSummary', $this->language->get('stats', ['models' => 'DSM 7', 'packages' => $packageCount]));
+            $output->setVariable('catalogSummary', $this->language->get('catalog_summary', ['packages' => $packageCount]));
             $output->setVariable('seoDescription', $this->language->get('all_packages') . ': ' . $packageCount);
             $output->setTemplate('html_packagelist');
         } catch (\Throwable $e) {

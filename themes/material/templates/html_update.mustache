@@ -3,14 +3,15 @@
     <div class="update-panel__header">
         <span class="eyebrow">INDEX MANAGEMENT</span>
         <h1>{{ update_title }}</h1>
-        <p>{{ update_intro }}</p>
+        <p>{{ index_intro }}</p>
     </div>
 
     <form class="update-form" data-update-form>
         <label for="update-token">{{ admin_password }}</label>
         <div class="update-form__controls">
             <input id="update-token" name="token" type="password" required autocomplete="off" spellcheck="false" placeholder="{{ password_placeholder }}" data-update-token>
-            <button class="mdl-button mdl-button--raised mdl-button--colored" type="submit" data-update-button>{{ start_update }}</button>
+            <button class="mdl-button mdl-button--raised mdl-button--colored" type="submit" name="mode" value="incremental" data-update-button>{{ index_incremental }}</button>
+            <button class="mdl-button" type="submit" name="mode" value="verify" data-update-verify>{{ index_verify }}</button>
         </div>
     </form>
 
@@ -24,8 +25,10 @@
             <span>{{ success }} <strong data-success-count>0</strong></span>
             <span>{{ failure }} <strong data-failure-count>0</strong></span>
             <span>{{ total }} <strong data-total-count>0</strong></span>
+            <span class="update-summary__details">({{ index_added }} <strong data-added-count>0</strong> · {{ index_changed }} <strong data-changed-count>0</strong> · {{ index_unchanged }} <strong data-unchanged-count>0</strong> · {{ index_deleted }} <strong data-deleted-count>0</strong>)</span>
         </div>
     </div>
+
 
     <div class="update-results">
         <section class="update-result update-result--success" aria-labelledby="success-title">

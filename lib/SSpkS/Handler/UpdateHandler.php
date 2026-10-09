@@ -2,22 +2,12 @@
 
 namespace SSpkS\Handler;
 
-use SSpkS\Model\Spk;
 use SSpkS\Output\HtmlOutput;
-use SSpkS\Package\BrowserImageObfuscator;
-use SSpkS\Package\BrowserPackageCatalog;
-use SSpkS\Package\Package;
-use SSpkS\Package\PackageFinder;
-use think\facade\Cache;
-use think\facade\Db;
 
 final class UpdateHandler extends AbstractHandler
 {
     private const AUTH_FAILURE_LIMIT = 5;
     private const AUTH_FAILURE_WINDOW = 60;
-    private const CHECKPOINT_INTERVAL = 50;
-    private const CHECKPOINT_VERSION = 1;
-    private const CHECKPOINT_MAX_BYTES = 67108864;
 
     public function canHandle(): bool
     {
@@ -56,116 +46,72 @@ final class UpdateHandler extends AbstractHandler
 
     private function runRefresh(): void
     {
-        header('Content-Type: application/x-ndjson; charset=utf-8');
+        header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: no-store');
         header('X-Content-Type-Options: nosniff');
-        header('X-Accel-Buffering: no');
-
-        if ($this->updateAuthFailures('read') >= self::AUTH_FAILURE_LIMIT) {
-            $this->rejectRefreshAuthentication();
-            return;
-        }
-
-        $configuredPassword = (string) ($this->config->update_token ?? '');
-        $authorization = (string) ($_SERVER['HTTP_AUTHORIZATION'] ?? '');
-        $providedPassword = stripos($authorization, 'Bearer ') === 0 ? trim(substr($authorization, 7)) : trim((string) ($_SERVER['HTTP_X_SSPKS_TOKEN'] ?? ''));
-
-        if ($configuredPassword === ''
-            || $providedPassword === ''
-            || !hash_equals($configuredPassword, $providedPassword)) {
-            $this->updateAuthFailures('record');
-            $this->rejectRefreshAuthentication();
-            return;
-        }
-        $this->updateAuthFailures('clear');
-
-        @set_time_limit(0);
-        @ini_set('output_buffering', 'off');
-        @ini_set('zlib.output_compression', '0');
-        while (ob_get_level() > 0) {
-            if (!@ob_end_flush()) {
-                break;
-            }
-        }
-        ob_implicit_flush(true);
-
-        $lockDir = $this->config->basePath . DIRECTORY_SEPARATOR . 'runtime';
-        if (!is_dir($lockDir) && !mkdir($lockDir, 0770, true)) {
-            $this->emit(['type' => 'error', 'message' => 'Unable to create the update lock directory.']);
-            return;
-        }
-        $lockFile = $lockDir . DIRECTORY_SEPARATOR . 'package-refresh.lock';
-        $lockHandle = @fopen($lockFile, 'c');
-        if ($lockHandle === false || !flock($lockHandle, LOCK_EX | LOCK_NB)) {
-            if (is_resource($lockHandle)) {
-                fclose($lockHandle);
-            }
-            $this->emit(['type' => 'error', 'message' => 'An update is already running. Please try again later.']);
-            return;
-        }
-
         try {
-            try {
-                $result = $this->updateData(function (array $event) {
-                    $this->emit($event);
-                });
-                try {
-                    Cache::clear();
-                } catch (\Throwable $e) {
-                    error_log('[SSpkS] Post-refresh cache cleanup failed: ' . $e->getMessage());
-                }
-                $thumbnailWarning = $this->rebuildBrowserImages();
-                $this->clearUpdateCheckpoint();
-                $this->emit([
-                    'type' => 'complete',
-                    'percent' => 100,
-                    'success' => $result['success'],
-                    'failed' => $result['failed'],
-                    'message' => $thumbnailWarning === ''
-                        ? 'Package index update completed.'
-                        : 'Package index update completed, but browser thumbnail generation failed: ' . $thumbnailWarning,
-                ]);
-            } catch (\Throwable $e) {
-                error_log('[SSpkS] Package index refresh failed: ' . $e->getMessage());
-                $detail = trim($e->getMessage());
-                $this->emit([
-                    'type' => 'error',
-                    'message' => $detail === ''
-                        ? 'Update failed; the existing index was preserved.'
-                        : 'Update failed: ' . $detail . ' (the existing index was preserved)',
-                ]);
+            if ($this->updateAuthFailures('read') >= self::AUTH_FAILURE_LIMIT) {
+                $this->rejectRefreshAuthentication(true);
+                return;
             }
-        } finally {
-            flock($lockHandle, LOCK_UN);
-            fclose($lockHandle);
-        }
-    }
-
-    private function rebuildBrowserImages(): string
-    {
-        try {
-            $images = new BrowserImageObfuscator($this->config);
-            $images->clearPublishedImages();
-            if (empty($this->config->browser_url_obfuscation['package_images'])) {
-                return '';
+            $authorization = (string) ($_SERVER['HTTP_AUTHORIZATION'] ?? '');
+            $provided = stripos($authorization, 'Bearer ') === 0 ? trim(substr($authorization, 7)) : trim((string) ($_SERVER['HTTP_X_SSPKS_TOKEN'] ?? ''));
+            $configured = (string) ($this->config->update_token ?? '');
+            if ($provided === '' || $configured === '' || !hash_equals($configured, $provided)) {
+                $this->updateAuthFailures('record');
+                $this->rejectRefreshAuthentication();
+                return;
             }
-            $this->emit([
-                'type' => 'progress',
-                'percent' => 98,
-                'message' => 'Regenerating browser WebP thumbnails…',
-            ]);
-            $catalog = new BrowserPackageCatalog($this->config);
-            $packages = $catalog->getAll(true);
-            if ($packages !== [] && $images->countPublishedImages() === 0) {
-                throw new \RuntimeException('The server lacks GD/Imagick WebP support or the cache directory is not writable');
-            }
-            if ($catalog->getImageFailureCount() > 0) {
-                throw new \RuntimeException($catalog->getImageFailureCount() . ' browser thumbnails could not be generated; check the PHP error log');
-            }
-            return '';
+            $this->updateAuthFailures('clear');
         } catch (\Throwable $e) {
-            error_log('[SSpkS] Browser WebP regeneration failed: ' . $e->getMessage());
-            return trim($e->getMessage());
+            http_response_code(503);
+            $this->emit(['type'=>'error','code'=>'auth_unavailable','message'=>'Authentication service unavailable.']);
+            return;
+        }
+        // Keep an individual PHP execution comfortably below the CDN's request limit.
+        $phpLimit = (int) ini_get('max_execution_time');
+        $limit = $phpLimit > 0 ? min(20, $phpLimit) : 20;
+        @set_time_limit($limit);
+        ignore_user_abort(true);
+        $budget = max(0.1, min(5.0, $limit / 3));
+        $lockFile = $this->config->basePath . DIRECTORY_SEPARATOR . 'runtime' . DIRECTORY_SEPARATOR . 'package-refresh.lock';
+        $directory = dirname($lockFile);
+        if (!is_dir($directory) && !mkdir($directory, 0770, true) && !is_dir($directory)) {
+            http_response_code(503);
+            $this->emit(['type'=>'error','message'=>'Cannot create index task directory.']);
+            return;
+        }
+        $lock = @fopen($lockFile, 'c');
+        if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) {
+            if (is_resource($lock)) { fclose($lock); }
+            http_response_code(409);
+            $this->emit(['type'=>'error','code'=>'busy','message'=>'An index batch is still running.']);
+            return;
+        }
+        try {
+            $operation = $_POST['operation'] ?? 'start';
+            $mode = $_POST['mode'] ?? 'incremental';
+            $id = $_POST['job'] ?? '';
+            $after = $_POST['after'] ?? '0';
+            if (!is_string($operation) || !is_string($mode) || !is_string($id)
+                || !is_string($after) || strlen($after) > 12 || !ctype_digit($after)) {
+                throw new \InvalidArgumentException('Invalid index request');
+            }
+            $job = new \SSpkS\IndexUpdateJob($this->config);
+            switch ($operation) {
+                case 'start': $result = $job->start($mode); break;
+                case 'step': $result = $job->step($id,(int)$after,$budget); break;
+                case 'status': $result = $job->snapshot($id,(int)$after); break;
+                default: throw new \InvalidArgumentException('Unknown index operation');
+            }
+            $this->emit($result);
+        } catch (\Throwable $e) {
+            http_response_code($e instanceof \InvalidArgumentException ? 400 : 422);
+            error_log('[SSpkS] Index batch failed: ' . $e->getMessage());
+            $this->emit(['type'=>'error','message'=>$e->getMessage()]);
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
         }
     }
 
@@ -173,15 +119,15 @@ final class UpdateHandler extends AbstractHandler
     {
         $json = json_encode($event, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
         echo ($json === false ? '{"type":"error","message":"Unable to encode update status."}' : $json) . "\n";
-        @ob_flush();
-        flush();
+
     }
 
-    private function rejectRefreshAuthentication(): void
+    private function rejectRefreshAuthentication(bool $limited = false): void
     {
-        usleep(250000);
-        http_response_code(404);
-        $this->emit(['type' => 'error', 'message' => 'The management password is invalid or not configured.']);
+        http_response_code($limited ? 429 : 401);
+        if ($limited) { header('Retry-After: 60'); }
+        $this->emit(['type'=>'error','code'=>$limited ? 'auth_rate_limited' : 'auth_invalid',
+            'message'=>$limited ? 'Too many authentication failures. Try again later.' : 'The management password is invalid or not configured.']);
     }
 
     private function updateAuthFailures(string $action): int
@@ -189,7 +135,7 @@ final class UpdateHandler extends AbstractHandler
         $directory = $this->config->basePath . DIRECTORY_SEPARATOR . 'runtime';
         if (!is_dir($directory) && !mkdir($directory, 0770, true) && !is_dir($directory)) {
             error_log('[SSpkS] Failed to create the refresh authentication rate-limit directory.');
-            return 0;
+            throw new \RuntimeException('Authentication rate limiter is unavailable');
         }
 
         $filename = $directory . DIRECTORY_SEPARATOR . 'refresh-auth-rate.json';
@@ -199,15 +145,18 @@ final class UpdateHandler extends AbstractHandler
                 fclose($handle);
             }
             error_log('[SSpkS] Failed to lock the refresh authentication rate-limit file.');
-            return 0;
+            throw new \RuntimeException('Authentication rate limiter cannot be locked');
         }
 
         try {
             rewind($handle);
-            $raw = stream_get_contents($handle);
-            $data = is_string($raw) && strlen($raw) <= 512 * 1024 ? json_decode($raw, true) : [];
+            $raw = stream_get_contents($handle, 512 * 1024 + 1);
+            if (!is_string($raw) || strlen($raw) > 512 * 1024) {
+                throw new \RuntimeException('Authentication rate-limit state exceeds the size limit');
+            }
+            $data = $raw === '' ? [] : json_decode($raw, true);
             if (!is_array($data)) {
-                $data = [];
+                throw new \RuntimeException('Authentication rate-limit state is corrupt');
             }
 
             $now = time();
@@ -242,13 +191,11 @@ final class UpdateHandler extends AbstractHandler
                 $data = array_slice($data, -1024, null, true);
             }
             $encoded = json_encode($data);
-            if (is_string($encoded)) {
-                rewind($handle);
-                ftruncate($handle, 0);
-                fwrite($handle, $encoded);
-                fflush($handle);
-                @chmod($filename, 0600);
+            if (!is_string($encoded) || !rewind($handle) || !ftruncate($handle, 0)
+                || fwrite($handle, $encoded) !== strlen($encoded) || !fflush($handle)) {
+                throw new \RuntimeException('Cannot persist authentication rate-limit state');
             }
+            @chmod($filename, 0600);
             return count($attempts);
         } finally {
             flock($handle, LOCK_UN);
@@ -256,374 +203,4 @@ final class UpdateHandler extends AbstractHandler
         }
     }
 
-    private function updateData(callable $emit): array
-    {
-        $spkModel = new Spk();
-        $tableName = $spkModel->getTable();
-        $existingPackages = Db::table($tableName)->column('md5,filemtime,filesize', 'spk');
-        $files = (new PackageFinder($this->config))->getAllPackageFiles();
-        $total = count($files);
-        $fileWeights = [];
-        $totalBytes = 0;
-        foreach ($files as $file) {
-            $size = filesize($file);
-            $fileWeights[$file] = $size === false ? 1 : max(1, (int) $size);
-            $totalBytes += $fileWeights[$file];
-        }
-        $processedBytes = 0;
-        $allData = [];
-        $success = 0;
-        $failed = 0;
-        $checkpointEntries = $this->loadUpdateCheckpoint();
-        if ($checkpointEntries !== []) {
-            $checkpointEntries = array_intersect_key(
-                $checkpointEntries,
-                array_fill_keys($files, true)
-            );
-        }
-
-        $emit([
-            'type' => 'start',
-            'percent' => 0,
-            'total' => $total,
-            'totalBytes' => $totalBytes,
-            'message' => $total > 0
-                ? ($checkpointEntries === [] ? 'Starting package file scan…' : 'Previous update checkpoint loaded; resuming scan…')
-                : 'No SPK files found.',
-        ]);
-
-        foreach ($files as $index => $file) {
-            $label = basename($file);
-            $filemtime = filemtime($file);
-            $filesize = filesize($file);
-            if ($filemtime !== false && $filesize !== false) {
-                $checkpointEntry = $checkpointEntries[$file] ?? null;
-                if ($this->isReusableCheckpointEntry($checkpointEntry, $file, $filemtime, $filesize)) {
-                    $row = $checkpointEntry['row'];
-                    $allData[] = $row;
-                    $success++;
-                    $processedBytes += $fileWeights[$file];
-                    $emit([
-                        'type' => 'success',
-                        'name' => $label,
-                        'detail' => (string) $row['displayname'] . ' · ' . (string) $row['version'] . ' (checkpoint)',
-                    ]);
-                    $emit([
-                        'type' => 'progress',
-                        'percent' => $this->scanPercent($processedBytes, $totalBytes),
-                        'processed' => $index + 1,
-                        'total' => $total,
-                        'message' => 'Reusing checkpoint: ' . $label,
-                    ]);
-                    continue;
-                }
-            }
-
-            $checkpointSaved = false;
-            try {
-                $pkg = new Package($this->config, $file);
-                $filePath = $this->config->basePath . DIRECTORY_SEPARATOR . $pkg->spk;
-                if (!is_file($filePath)) {
-                    throw new \RuntimeException('File does not exist or is not readable');
-                }
-
-                $filemtime = filemtime($filePath);
-                $filesize = filesize($filePath);
-                if ($filemtime === false || $filesize === false) {
-                    throw new \RuntimeException('Unable to read file attributes');
-                }
-
-                $cached = $existingPackages[$pkg->spk] ?? null;
-                $canReuseHash = is_array($cached)
-                    && (int) ($cached['filemtime'] ?? -1) === $filemtime
-                    && (int) ($cached['filesize'] ?? -1) === $filesize
-                    && preg_match('/^[a-f0-9]{32}$/i', (string) ($cached['md5'] ?? '')) === 1;
-                if ($canReuseHash) {
-                    $md5 = (string) $cached['md5'];
-                    $emit([
-                        'type' => 'progress',
-                        'percent' => $this->scanPercent($processedBytes + $fileWeights[$file], $totalBytes),
-                        'processed' => $index,
-                        'total' => $total,
-                        'message' => 'Reusing checksum: ' . $label,
-                    ]);
-                } else {
-                    $md5 = $this->hashFileInChunks(
-                        $filePath,
-                        $filesize,
-                        $label,
-                        $processedBytes,
-                        $totalBytes,
-                        $index,
-                        $total,
-                        $emit
-                    );
-                    clearstatcache(true, $filePath);
-                    if (filesize($filePath) !== $filesize || filemtime($filePath) !== $filemtime) {
-                        throw new \RuntimeException('File changed while calculating its checksum; restart the update');
-                    }
-                }
-                if ($md5 === '') {
-                    throw new \RuntimeException('Unable to calculate file checksum');
-                }
-
-                $pkg->filesize = $filesize;
-                $pkg->md5 = $md5;
-                $row = [
-                    'displayname' => $pkg->displayname ?? '',
-                    'package' => $pkg->package,
-                    'version' => $pkg->version,
-                    'arch' => implode(',', $pkg->arch),
-                    'os_min_ver' => $pkg->os_min_ver,
-                    'beta' => $pkg->beta ? 1 : 0,
-                    'spk' => $pkg->spk,
-                    'filesize' => $filesize,
-                    'md5' => $md5,
-                    'filemtime' => $filemtime,
-                    'params' => serialize($pkg),
-                ];
-                $allData[] = $row;
-                $checkpointEntries[$file] = [
-                    'filemtime' => $filemtime,
-                    'filesize' => $filesize,
-                    'row' => $row,
-                ];
-                if (($index + 1) % self::CHECKPOINT_INTERVAL === 0) {
-                    $this->saveUpdateCheckpoint($checkpointEntries);
-                    $checkpointSaved = true;
-                }
-                $success++;
-                $emit([
-                    'type' => 'success',
-                    'name' => $label,
-                    'detail' => $pkg->displayname . ' · ' . $pkg->version,
-                ]);
-            } catch (\Throwable $e) {
-                $failed++;
-                error_log('[SSpkS] Ignored invalid package ' . $label . ': ' . $e->getMessage());
-                if (($index + 1) % self::CHECKPOINT_INTERVAL === 0 && !$checkpointSaved) {
-                    $this->saveUpdateCheckpoint($checkpointEntries);
-                    $checkpointSaved = true;
-                }
-                $emit([
-                    'type' => 'failure',
-                    'name' => $label,
-                    'detail' => $e->getMessage(),
-                ]);
-            }
-
-            if (($index + 1) % self::CHECKPOINT_INTERVAL === 0 && !$checkpointSaved) {
-                $this->saveUpdateCheckpoint($checkpointEntries);
-                $checkpointSaved = true;
-            }
-            $processedBytes += $fileWeights[$file];
-            $emit([
-                'type' => 'progress',
-                'percent' => $this->scanPercent($processedBytes, $totalBytes),
-                'processed' => $index + 1,
-                'total' => $total,
-                'message' => $checkpointSaved
-                    ? 'Update checkpoint saved (' . ($index + 1) . '/' . $total . ')'
-                    : 'Checking packages…',
-            ]);
-            if (connection_aborted()) {
-                $this->saveUpdateCheckpoint($checkpointEntries);
-                throw new \RuntimeException('Browser connection was interrupted; scan progress was saved');
-            }
-        }
-
-        if ($allData === []) {
-            if ($total === 0) {
-                throw new \RuntimeException('No .spk files were found in the packages directory.');
-            }
-            throw new \RuntimeException('No valid DSM 7 packages are available to write to the database; review the failure list');
-        }
-
-        $this->saveUpdateCheckpoint($checkpointEntries);
-        $emit(['type' => 'progress', 'percent' => 95, 'message' => 'Writing database index…']);
-        Db::startTrans();
-        try {
-            Db::table($tableName)->delete(true);
-            $spkModel->saveAll($allData);
-            Db::commit();
-        } catch (\Throwable $e) {
-            Db::rollback();
-            throw $e;
-        }
-
-        return ['success' => $success, 'failed' => $failed];
-    }
-
-    private function checkpointFilename(): string
-    {
-        return $this->config->basePath . DIRECTORY_SEPARATOR . 'runtime'
-            . DIRECTORY_SEPARATOR . 'package-refresh.checkpoint';
-    }
-
-    private function checkpointFingerprint(): string
-    {
-        $packageClass = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Package'
-            . DIRECTORY_SEPARATOR . 'Package.php';
-        return hash('sha256', serialize([
-            'packages' => $this->config->packages,
-            'package_path' => $this->config->paths['packages'] ?? '',
-            'package_code' => is_file($packageClass) ? hash_file('sha256', $packageClass) : '',
-        ]));
-    }
-
-    private function loadUpdateCheckpoint(): array
-    {
-        $filename = $this->checkpointFilename();
-        if (!is_file($filename)) {
-            return [];
-        }
-        $size = filesize($filename);
-        if ($size === false || $size < 1 || $size > self::CHECKPOINT_MAX_BYTES) {
-            $this->clearUpdateCheckpoint();
-            return [];
-        }
-
-        $raw = file_get_contents($filename);
-        if (!is_string($raw)) {
-            return [];
-        }
-        $checkpoint = @unserialize($raw, ['allowed_classes' => false]);
-        if (!is_array($checkpoint)
-            || ($checkpoint['version'] ?? null) !== self::CHECKPOINT_VERSION
-            || !hash_equals($this->checkpointFingerprint(), (string) ($checkpoint['fingerprint'] ?? ''))
-            || !isset($checkpoint['entries'])
-            || !is_array($checkpoint['entries'])) {
-            $this->clearUpdateCheckpoint();
-            return [];
-        }
-        return $checkpoint['entries'];
-    }
-
-    private function isReusableCheckpointEntry($entry, string $file, int $filemtime, int $filesize): bool
-    {
-        if (!is_array($entry)
-            || (int) ($entry['filemtime'] ?? -1) !== $filemtime
-            || (int) ($entry['filesize'] ?? -1) !== $filesize
-            || !isset($entry['row'])
-            || !is_array($entry['row'])) {
-            return false;
-        }
-
-        $row = $entry['row'];
-        $requiredFields = [
-            'displayname', 'package', 'version', 'arch', 'os_min_ver', 'beta',
-            'spk', 'filesize', 'md5', 'filemtime', 'params',
-        ];
-        foreach ($requiredFields as $field) {
-            if (!array_key_exists($field, $row) || !is_scalar($row[$field])) {
-                return false;
-            }
-        }
-        return (string) $row['spk'] === $file
-            && (int) $row['filemtime'] === $filemtime
-            && (int) $row['filesize'] === $filesize
-            && preg_match('/^[a-f0-9]{32}$/iD', (string) $row['md5']) === 1;
-    }
-
-    private function saveUpdateCheckpoint(array $entries): void
-    {
-        $filename = $this->checkpointFilename();
-        $temporary = $filename . '.tmp';
-        $payload = serialize([
-            'version' => self::CHECKPOINT_VERSION,
-            'fingerprint' => $this->checkpointFingerprint(),
-            'entries' => $entries,
-        ]);
-        if (strlen($payload) > self::CHECKPOINT_MAX_BYTES) {
-            throw new \RuntimeException('Update checkpoint exceeds the size limit');
-        }
-        if (file_put_contents($temporary, $payload, LOCK_EX) === false) {
-            throw new \RuntimeException('Unable to write update checkpoint');
-        }
-        @chmod($temporary, 0600);
-        if (!@rename($temporary, $filename)) {
-            @unlink($temporary);
-            throw new \RuntimeException('Unable to replace update checkpoint');
-        }
-    }
-
-    private function clearUpdateCheckpoint(): void
-    {
-        $filename = $this->checkpointFilename();
-        if (is_file($filename) && !@unlink($filename)) {
-            error_log('[SSpkS] Failed to remove refresh checkpoint: ' . $filename);
-        }
-        $temporary = $filename . '.tmp';
-        if (is_file($temporary)) {
-            @unlink($temporary);
-        }
-    }
-
-    private function scanPercent(int $processedBytes, int $totalBytes): int
-    {
-        return $totalBytes > 0 ? min(90, (int) floor(($processedBytes / $totalBytes) * 90)) : 0;
-    }
-
-    private function hashFileInChunks(
-        string $filePath,
-        int $fileSize,
-        string $label,
-        int $processedBytes,
-        int $totalBytes,
-        int $fileIndex,
-        int $fileTotal,
-        callable $emit
-    ): string {
-        $handle = @fopen($filePath, 'rb');
-        if ($handle === false) {
-            throw new \RuntimeException('Unable to open file for MD5 calculation');
-        }
-
-        $context = hash_init('md5');
-        $chunkSize = 8 * 1024 * 1024;
-        $emitInterval = 16 * 1024 * 1024;
-        $hashedBytes = 0;
-        $lastEmittedBytes = 0;
-        $lastEmittedAt = microtime(true);
-
-        try {
-            while (!feof($handle)) {
-                $chunk = fread($handle, $chunkSize);
-                if ($chunk === false) {
-                    throw new \RuntimeException('An error occurred while reading the file');
-                }
-                if ($chunk === '') {
-                    if (!feof($handle)) {
-                        throw new \RuntimeException('No data was returned while reading the file');
-                    }
-                    break;
-                }
-
-                hash_update($context, $chunk);
-                $hashedBytes += strlen($chunk);
-                $now = microtime(true);
-                if (($hashedBytes - $lastEmittedBytes) >= $emitInterval || ($now - $lastEmittedAt) >= 1.0) {
-                    $filePercent = $fileSize > 0 ? min(100, (int) floor(($hashedBytes / $fileSize) * 100)) : 100;
-                    $emit([
-                        'type' => 'progress',
-                        'percent' => $this->scanPercent($processedBytes + min($hashedBytes, $fileSize), $totalBytes),
-                        'processed' => $fileIndex,
-                        'total' => $fileTotal,
-                        'filePercent' => $filePercent,
-                        'message' => 'Calculating MD5: ' . $label . ' (' . $filePercent . '%)',
-                    ]);
-                    $lastEmittedBytes = $hashedBytes;
-                    $lastEmittedAt = $now;
-                }
-
-                if (connection_aborted()) {
-                    throw new \RuntimeException('Browser connection was interrupted');
-                }
-            }
-
-            return hash_final($context);
-        } finally {
-            fclose($handle);
-        }
-    }
 }

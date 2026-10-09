@@ -10,3 +10,11 @@
 *.sqlite-shm
 *.log
 /.env
+
+# Local review and detailed notes (deployment guidance lives in README).
+/INDEX_UPDATE.md
+/LOCAL_REVIEW.md
+/OFFICIAL_SPK_SUPPORT.md
+/RELEASE_TESTS.md
+/SECURITY_REVIEW.md
+/outputs/

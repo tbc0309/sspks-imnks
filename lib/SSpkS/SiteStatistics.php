@@ -3,7 +3,7 @@
 namespace SSpkS;
 
 use SSpkS\Device\DeviceList;
-use SSpkS\Package\BrowserPackageCatalog;
+use SSpkS\Package\PackageFilter;
 use think\facade\Cache;
 
 final class SiteStatistics
@@ -18,7 +18,11 @@ final class SiteStatistics
     /** @return array{models: int, packages: int} */
     public function get(): array
     {
-        $cacheKey = 'site_statistics_v2';
+        $modelsFile = $this->config->basePath . DIRECTORY_SEPARATOR . $this->config->paths['models'];
+        $cacheKey = 'site_statistics_v3_' . hash('sha256', serialize([
+            $this->config->paths, $this->config->models,
+            is_file($modelsFile) ? filesize($modelsFile) . ':' . filemtime($modelsFile) : '',
+        ]));
         try {
             $cached = Cache::get($cacheKey);
             if (is_array($cached) && isset($cached['models'], $cached['packages'])) {
@@ -31,9 +35,11 @@ final class SiteStatistics
             error_log('[SSpkS] Failed to read the site statistics cache: ' . $e->getMessage());
         }
 
+        $filter = new PackageFilter($this->config);
+        $filter->setOldVersionFilter(true);
         $statistics = [
             'models' => count((new DeviceList($this->config))->getDevices($this->config->models['priority_models'])),
-            'packages' => count((new BrowserPackageCatalog($this->config))->getAll()),
+            'packages' => count($filter->getFilteredPackageList()),
         ];
         try {
             Cache::set($cacheKey, $statistics, 300);

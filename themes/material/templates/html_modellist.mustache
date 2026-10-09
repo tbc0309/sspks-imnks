@@ -10,14 +10,16 @@
     <input id="model-search" type="search" placeholder="{{ model_placeholder }}" autocomplete="off" enterkeyhint="search" data-model-search>
     <div class="model-toolbar__status">
         <span data-model-count role="status" aria-live="polite" aria-atomic="true"></span>
+        <button class="model-clear mdl-button" type="button" data-model-clear hidden>{{ clear_search }}</button>
         <button class="model-toggle mdl-button" type="button" aria-controls="model-grid" data-model-toggle>{{ show_all }}</button>
     </div>
+    <p class="model-empty" data-model-empty role="status" hidden>{{ model_no_results }}</p>
 </div>
 {{# advertisementEnabled }}
-<aside class="model-ad" aria-label="{{ advertisement }}" data-ad-carousel data-ad-interval="{{ advertisementInterval }}" hidden>
+<aside class="model-ad" aria-label="{{ advertisement }}" style="--advertisement-ratio: {{ advertisementWidth }} / {{ advertisementHeight }};" data-ad-carousel data-ad-interval="{{ advertisementInterval }}" aria-busy="true">
 {{# advertisementItems }}
     <a class="ad-banner" href="{{ target_url }}" target="_blank" rel="noopener noreferrer sponsored" aria-label="{{ alt }}" aria-hidden="true" data-ad-slide hidden>
-        <img data-src="{{ image_url }}" alt="{{ alt }}" decoding="async" fetchpriority="low">
+        <img data-src="{{ image_url }}" alt="{{ alt }}" width="{{ advertisementWidth }}" height="{{ advertisementHeight }}" decoding="async" fetchpriority="low">
     </a>
 {{/ advertisementItems }}
 {{# advertisementHasMultiple }}
@@ -29,6 +31,7 @@
 {{/ advertisementHasMultiple }}
 </aside>
 {{/ advertisementEnabled }}
+<noscript><style>.model-ad { display: none; }</style></noscript>
 <div class="mdl-grid model-grid" id="model-grid" data-model-grid>
 {{# modellist }}
     <a class="mdl-cell mdl-cell--2-col mdl-card small-card clickable-card" href="?arch={{ arch }}" data-model-card data-model-name="{{ name }} {{ arch }}" {{# priority_rank }}data-priority-rank="{{ priority_rank }}"{{/ priority_rank }}>

@@ -4,16 +4,18 @@
     "license": "GPL-3.0-only",
     "type": "project",
     "require": {
-        "php": ">=7.4",
+        "php": "^8.4",
         "ext-json": "*",
         "ext-pdo": "*",
         "ext-pdo_mysql": "*",
         "ext-pdo_sqlite": "*",
         "ext-phar": "*",
-        "mustache/mustache": "^2.14.2",
-        "symfony/yaml": "5.4.*",
-        "topthink/think-cache": "^2.0.7",
-        "topthink/think-orm": "^2.0.52"
+        "mustache/mustache": "^3.2",
+        "symfony/yaml": "^7.4",
+        "topthink/think-cache": "^3.0",
+        "topthink/think-orm": "^4.0",
+        "ext-sodium": "*",
+        "ext-mbstring": "*"
     },
     "autoload": {
         "psr-4": {
@@ -23,7 +25,7 @@
     "config": {
         "optimize-autoloader": true,
         "platform": {
-            "php": "7.4.33"
+            "php": "8.4.0"
         },
         "preferred-install": "dist",
         "sort-packages": true

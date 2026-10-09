@@ -1,0 +1,36 @@
+name: PHP 8.4 checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: json, pdo, pdo_mysql, pdo_sqlite, phar, sodium, mbstring, gd
+          coverage: none
+      - run: composer validate --strict --no-check-publish
+      - run: composer install --no-dev --classmap-authoritative --no-interaction --no-progress
+      - run: composer check-platform-reqs --no-dev
+      - run: find . -path './vendor' -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
+      - run: |
+          php tests/ordinary_spk_smoke.php
+          php tests/dsm_version_test.php
+          php tests/package_dsm_selection_test.php
+          php tests/synology_kdf_test.php
+          php tests/php84_regression_test.php
+          php tests/index_update_job_test.php
+          php tests/template_render_test.php
+      - run: node --check themes/material/js/script.js && node --check themes/material/js/update.js
+
+      - run: node tests/frontend_update_test.cjs
+
+      - run: php tests/model_cache_load_test.php

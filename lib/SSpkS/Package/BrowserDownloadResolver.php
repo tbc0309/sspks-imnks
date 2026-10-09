@@ -4,6 +4,7 @@ namespace SSpkS\Package;
 
 use SSpkS\Config;
 use think\facade\Db;
+use think\facade\Cache;
 
 final class BrowserDownloadResolver
 {
@@ -34,15 +35,24 @@ final class BrowserDownloadResolver
             return null;
         }
 
-        foreach (Db::name('Spk')->field('spk,md5')->order('id desc')->cursor() as $row) {
-            $md5 = strtolower(trim((string) ($row['md5'] ?? '')));
-            if (!hash_equals($token, $this->tokenFromMd5($md5))) {
-                continue;
+        $cacheKey = 'browser_download_map_v2_' . hash('sha256', serialize([
+            $this->config->paths['packages'], Package::CACHE_VERSION,
+        ]));
+        try { $mapping = Cache::get($cacheKey); } catch (\Throwable $e) { $mapping = null; }
+        if (!is_array($mapping)) {
+            $mapping = [];
+            foreach (Db::name('Spk')->field('spk,md5')->order('id desc')->cursor() as $row) {
+                $key = $this->tokenFromMd5((string) ($row['md5'] ?? ''));
+                if ($key !== '') {
+                    $mapping[$key][] = (string) ($row['spk'] ?? '');
+                }
             }
-
-            $resolved = $this->resolvePackageFile((string) ($row['spk'] ?? ''));
-            if ($resolved !== null) {
-                return $resolved;
+            try { Cache::set($cacheKey, $mapping, 300); } catch (\Throwable $e) { error_log($e->getMessage()); }
+        }
+        foreach ($mapping[$token] ?? [] as $relativePath) {
+            if (is_string($relativePath)) {
+                $resolved = $this->resolvePackageFile($relativePath);
+                if ($resolved !== null) { return $resolved; }
             }
         }
         return null;

@@ -42,8 +42,13 @@ final class BrowserPackageCatalog
     private function load(?string $architecture, bool $refresh): array
     {
         $scope = $architecture === null ? 'all' : strtolower($architecture);
+        $fingerprint = hash('sha256', serialize([
+            $this->config->baseUrl, $this->config->baseUrlRelative,
+            $this->config->packages, $this->config->paths,
+            Package::CACHE_VERSION,
+        ]));
         $cacheKey = 'browser_catalog_v21_' . md5(
-            $scope . '|' . $this->language . '|' . (int) $this->downloadEnabled
+            $fingerprint . '|' . $scope . '|' . $this->language . '|' . (int) $this->downloadEnabled
             . '|' . (int) $this->config->browser_url_obfuscation['package_images']
             . '|' . (int) $this->config->browser_url_obfuscation['spk_downloads']
             . '|' . (int) $this->config->appearance['show_runtime_badges']
@@ -89,6 +94,10 @@ final class BrowserPackageCatalog
 
     private function present(array $metadata): array
     {
+        $displayNameKey = 'displayname_' . $this->language;
+        if (isset($metadata[$displayNameKey]) && trim((string) $metadata[$displayNameKey]) !== '') {
+            $metadata['displayname'] = $metadata[$displayNameKey];
+        }
         $localizedKey = 'description_' . $this->language;
         if (!empty($metadata[$localizedKey])) {
             $metadata['description'] = $metadata[$localizedKey];
@@ -168,7 +177,7 @@ final class BrowserPackageCatalog
             $badges[] = [
                 'type' => $type['type'],
                 'label' => $type['label'],
-                'title' => 'Powered by ' . $type['label'],
+                'title' => Language::getInstance($this->config)->get('powered_by', ['runtime' => $type['label']]),
                 'icon' => $type['icon'] ?? $type['type'] . '.svg',
             ];
         }

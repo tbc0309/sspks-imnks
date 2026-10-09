@@ -100,6 +100,7 @@ final class Language
             ? strtolower(trim($_GET['lang']))
             : '';
         if (in_array($requested, self::SUPPORTED, true)) {
+            header('Cache-Control: private, no-store');
             setcookie('sspks_language', $requested, [
                 'expires' => time() + 31536000,
                 'path' => '/',
@@ -122,7 +123,23 @@ final class Language
         }
 
         $acceptLanguage = strtolower((string) ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''));
-        foreach (explode(',', $acceptLanguage) as $part) {
+        $preferences = [];
+        foreach (explode(',', $acceptLanguage) as $index => $entry) {
+            $parts = explode(';', trim($entry));
+            $quality = 1.0;
+            foreach (array_slice($parts, 1) as $parameter) {
+                if (preg_match('/^q=(0(?:\.[0-9]{1,3})?|1(?:\.0{1,3})?)$/D', trim($parameter), $match)) {
+                    $quality = (float) $match[1];
+                }
+            }
+            if ($quality > 0) {
+                $preferences[] = ['value' => $entry, 'quality' => $quality, 'index' => $index];
+            }
+        }
+        usort($preferences, static fn (array $a, array $b): int =>
+            ($b['quality'] <=> $a['quality']) ?: ($a['index'] <=> $b['index']));
+        foreach ($preferences as $preference) {
+            $part = $preference['value'];
             $locale = trim(explode(';', $part, 2)[0]);
             if (isset(self::ACCEPT_LANGUAGE_MAP[$locale])) {
                 return self::ACCEPT_LANGUAGE_MAP[$locale];

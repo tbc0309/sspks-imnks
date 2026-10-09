@@ -1,53 +1,84 @@
 # SSPKS-IMNKS
 
-[English](README.en.md) | [简体中文](README.md)
+English | [简体中文](README.md)
 
-A multilingual, self-hosted SPK package repository for Synology DSM 7, derived from [jdel/sspks](https://github.com/jdel/sspks).
+A multilingual, self-hosted SPK repository for Synology DSM 7, derived from [jdel/sspks](https://github.com/jdel/sspks). Features include 21 UI languages, model/architecture filtering, ordinary and official keytype 3 SPKs, incremental indexing and resumable updates.
 
-**Live site:** Visit [spk7.imnks.com](https://spk7.imnks.com/) to see the original SSPKS-IMNKS deployment maintained by the project author.
+[Author-maintained site](https://spk7.imnks.com/)
 
-![SSPKS-IMNKS demo](docs/images/sspks-imnks-demo.png)
+![Interface preview](docs/images/sspks-imnks-demo.png)
 
-## Why this edition
 
-- 21 complete UI languages with browser detection, an optional fixed default, and remembered visitor selection.
-- Simplified Chinese and English are maintained directly; all other language packs are AI-translated and may require native-speaker review.
-- MySQL/MariaDB and SQLite3 backends. SQLite is the demonstration default and is usually the simpler choice for a repository with only a few hundred packages.
-- Responsive Material interface with four palettes, model search, priority models, progressive package cards, runtime badges, Synology branding, configurable footer links, and an advertisement carousel.
-- DSM 7 metadata validation, guarded SPK archive reading, model/architecture filtering, and localized package descriptions.
-- Resumable index refreshes with checkpoints every 50 packages and streamed MD5 reads in 8 MiB chunks.
-- Transactional index replacement: a failed database write preserves the previous index.
-- Generated WebP browser thumbnails and optional obfuscation of image and SPK download URLs.
+## Features
 
-## Requirements
+- 21 UI languages, browser detection or a configured language, manual switching and cookie persistence.
+- Responsive Material interface with four palettes, model search, priority models and progressive package cards.
+- Filtering by model, architecture, DSM version and stable/beta channel, with localized package names and descriptions.
+- Ordinary TAR SPKs and official keytype 3 encrypted SPKs, official badges and runtime badges.
+- SQLite or MySQL/MariaDB indexing, incremental MD5 reuse, chunked full verification, live progress and resumable jobs.
+- Converted browser images, optional browser downloads and URL obfuscation, configurable footer links and banner rotation.
 
-- PHP 7.4 or later
-- PHP extensions: `json`, `pdo`, `phar`, plus `pdo_sqlite` and/or `pdo_mysql`
-- A web server with PHP-FPM or equivalent
-- Write access to `cache/` and `runtime/`
+Simplified Chinese and English are maintained directly. Other languages are AI-translated; wording improvements are welcome.
 
-The committed `vendor/` directory was installed for PHP 7.4 and is ready for a PHP 7.4 deployment. For another PHP version, rebuild it on that runtime:
+## 1. Requirements
 
-```bash
-composer install --no-dev --classmap-authoritative --no-interaction
-```
+- PHP 8.4 or later with PHP-FPM.
+- Extensions: json, pdo, pdo_sqlite, pdo_mysql, phar, sodium and mbstring. Use GD with WebP support or Imagick for images.
+- PHP must be able to write to cache/ and runtime/. Resumable tasks require pdo_sqlite even when the main index uses MySQL.
 
-## Quick start
+Release packages include vendor/; no dependency installation is required.
 
-1. Copy the project to the web root.
-2. Edit `conf/sspks.yaml` and `conf/database.yaml`.
-3. Change the example URL and both management/database passwords before going online.
-4. Put DSM 7 `.spk` files in `packages/`.
-5. Make `cache/` and `runtime/` writable by PHP.
-6. Change `update.action`, open `/?action={configured-action}`, and enter the management password.
+## 2. Deploy and configure
 
-SQLite creates its schema automatically. For MySQL/MariaDB, import `wd_spk2.sql`. An SQLite schema reference is provided in `wd_spk2.sqlite.sql`.
+1. Download the release ZIP and extract it into your web directory.
+2. Edit conf/sspks.yaml: set site.base_url to the public URL and choose a hard-to-guess update.action. Set browser_download.enabled to true to allow browser downloads.
+3. Edit conf/database.yaml and set management_password. SQLite is the default and creates tables automatically. For MySQL/MariaDB, configure the connection and import wd_spk2.sql with a matching table prefix.
+4. Apply the Nginx routing and access restrictions below. Replace the domain, root, PHP-FPM socket and download alias. Enable HTTPS, run nginx -t and reload.
+5. Update the Sitemap URL in robots.txt.
 
-> **Index refresh memory:** Refreshing the package index reads and parses SPK metadata, calculates file hashes, and temporarily holds data before it is written to the database. Memory usage can be significant when the repository contains many packages. Set PHP's `memory_limit` to at least `1024M`, either temporarily for the refresh or permanently, to prevent an out-of-memory interruption. Web refreshes use the PHP-FPM configuration, while command-line refreshes use the CLI configuration; these may load different `php.ini` files. Reload or restart PHP-FPM after changing its permanent configuration.
+Language follows the browser by default. Use language.fixed for a default language (such as chs or enu) and language.show_selector for the language menu. Other interface options are documented in conf/sspks.yaml comments.
 
-## Recommended Nginx configuration
 
-The application handles its own friendly 404 page. Nginx must therefore send requests for files that do not exist to `index.php` while continuing to serve real static assets directly. The example below also blocks sensitive source/configuration paths and provides the internal download location required when browser SPK URL obfuscation is enabled.
+### Common settings
+
+Site settings are in conf/sspks.yaml; database settings and the management password are in conf/database.yaml.
+
+| Setting | Purpose |
+| --- | --- |
+| site.name / site.base_url | Site name and public URL, including a trailing slash |
+| update.action | Index-management action: 3–128 letters, digits, dots, underscores or hyphens |
+| language.fixed / language.show_selector | Default language and language-switching menu |
+| paths.packages | SPK directory, default packages/ |
+| appearance.default_palette | Default palette: teal, ocean, violet or dark |
+| appearance.show_runtime_badges | Show Docker, PHP, Python and other runtime badges |
+| models.show_all_by_default / models.priority_models | Initial model display and priority models |
+| browser_download.enabled | Browser downloads; independent of DSM Package Center downloads |
+| browser_url_obfuscation | Image and browser SPK download URL obfuscation |
+| advertisement / footer | Banner rotation and footer links |
+
+Language codes: chs, cht, csy, dan, enu, fre, ger, hun, ita, jpn, krn, nld, nor, plk, ptb, ptg, rus, spn, sve, tha and trk. Leave language.fixed blank for detection. A configured language is enforced when the selector is disabled.
+
+Obfuscated browser SPK downloads require the internal Nginx download location. When changing the package directory, update both paths.packages and the alias. Browser downloads are disabled by default; DSM Package Center remains available.
+
+## 3. Add packages and refresh the index
+
+1. Place DSM 7 .spk files in packages/, or the directory configured by paths.packages.
+2. Open https://your-domain/?action=your-configured-value, enter the management password and click Update index.
+3. Check the package list after completion.
+4. In DSM, open Package Center → Settings → Package Sources → Add and enter a name and your public site URL.
+
+Daily updates process new or changed SPKs and reuse MD5 for unchanged size/mtime. Editing a matching .nfo in cache/ also updates metadata when you refresh the index. Full verification recalculates all MD5 values. Work runs in short batches; reopen the page and enter the password to resume. Parsing failures or an empty package directory preserve existing records.
+
+Package Center responses are cached by model/architecture, DSM base version/build, language and update channel, without separate Update patch numbers. The cache expires after one hour and is cleared when indexing completes.
+
+
+Success includes added, changed and unchanged files; deletion is counted separately. The total is the number of scanned SPKs. Each package commits independently, so completed records take effect before the entire job ends. Use Full verification for content replaced without changing size or modification time.
+
+Extracted files use the SPK filename: .nfo contains metadata, .source tracks invalidation, and wizard markers and images are stored separately. Normally, do not edit .source. Package Center responses use at most 4096 cache slots; monitor runtime/cache disk usage.
+
+## 4. Nginx configuration
+
+This example uses the domain root. Only cache images are public. The internal download alias must match your package directory and remain internal. Configure your CDN to preserve JSON errors from management requests and bypass caching for them.
 
 ```nginx
 server {
@@ -56,33 +87,28 @@ server {
     root /var/www/sspks-imnks;
     index index.php;
 
-    # Existing assets are served directly; every unknown URL reaches the
-    # application router so SSPKS-IMNKS can render its own 404 page.
     location / {
         try_files $uri $uri/ /index.php?$query_string;
     }
 
-    # Only the front controller may execute PHP.
     location = /index.php {
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root/index.php;
         fastcgi_param HTTP_AUTHORIZATION $http_authorization;
-        fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        fastcgi_intercept_errors off;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
     }
 
     location ~ \.php$ {
         return 404;
     }
 
-    # Required by X-Accel-Redirect for obfuscated browser downloads.
-    # Keep this internal and make the alias match paths.packages.
     location ^~ /_sspks_download/ {
         internal;
         alias /var/www/sspks-imnks/packages/;
         default_type application/octet-stream;
     }
 
-    # Never expose application source, dependencies, configuration, or runtime data.
     location ~ ^/(?:conf|languages|lib|runtime|vendor)(?:/|$) {
         deny all;
     }
@@ -99,78 +125,41 @@ server {
         deny all;
     }
 
-    # SPK files must remain reachable by DSM Package Center. Disable listing,
-    # but do not block the packages directory itself.
     location ^~ /packages/ {
         autoindex off;
         try_files $uri =404;
         types { application/octet-stream spk; }
     }
 
+    location ^~ /cache/ {
+        if ($uri !~* \.(?:png|webp)$) { return 404; }
+        autoindex off;
+        try_files $uri =404;
+        add_header X-Content-Type-Options nosniff always;
+    }
+
     client_max_body_size 16m;
 }
 ```
 
-Replace the domain, project root, PHP-FPM socket, and package alias for your server. If the project is installed below a URL prefix instead of the domain root, also adjust `site.base_url` and the matching Nginx locations. Test with `nginx -t` before reloading Nginx. Do not use `error_page 404 /index.php`; `try_files` lets the application distinguish its own routes and render the bundled 404 page correctly.
+For a subdirectory deployment, adjust site.base_url, Nginx locations and aliases accordingly.
 
-## Configuration notes
+## 5. Upgrade and maintain
 
-### Language
+- Back up configuration, index databases and edited .nfo files.
+- Keep conf/, package directories, cache/ and runtime/ when replacing application files, then refresh the index. Parser or SPK changes may regenerate .nfo files.
+- runtime/ holds databases and tasks; cache/ holds extracted content. Block public access to configuration, source, logs and cache metadata, and monitor disk space.
+- Encrypted official SPKs require sodium. Keytype 3 is supported; other historical or future formats may not be.
+- Download counts are placeholders, not actual usage statistics.
 
-Set `language.fixed` in `conf/sspks.yaml` for the first visit. Leave it blank to detect the browser language and fall back to English. When `language.show_selector` is `true`, visitors may switch language and the choice is remembered in a cookie. When it is `false`, the selector is hidden and the configured language is enforced.
 
-Supported codes: `chs`, `cht`, `csy`, `dan`, `enu`, `fre`, `ger`, `hun`, `ita`, `jpn`, `krn`, `nld`, `nor`, `plk`, `ptb`, `ptg`, `rus`, `spn`, `sve`, `tha`, and `trk`.
+## Troubleshooting
 
-### Public URL and robots.txt
+- **Wrong password or rate limit:** Check management_password or the SSPKS_UPDATE_TOKEN environment variable. Wrong passwords return 401; after repeated failures, 429 requires a one-minute wait. Authentication failures do not start a job.
+- **Interrupted update:** Reopen the configured action and enter the password to resume. Ensure runtime/ is writable and pdo_sqlite is enabled. Prevent CDN HTML error-page substitution.
+- **Missing packages:** Check the directory, .spk files, index results, architecture and minimum DSM requirements. Consult server logs for parsing errors.
+- **Image or download failures:** Check cache/ permissions, image extensions and the internal download alias. Browser download settings do not affect DSM downloads.
 
-The included configuration intentionally uses `https://packages.example.com/`. Before deployment, replace it in `conf/sspks.yaml` and update the `Sitemap` line in `robots.txt` to your actual public domain. Keeping the example value is safe but prevents search engines from discovering the correct sitemap.
+## License
 
-### Private refresh action
-
-Set `update.action` in `conf/sspks.yaml` to a hard-to-guess URL-safe value, then open `https://your-domain/?action={configured-action}` to refresh the index. The value must contain 3–128 letters, numbers, dots, underscores, or hyphens. Only the configured action is accepted. This reduces routine discovery of the management page, while the management password and authentication rate limit remain the primary protections.
-
-### Database
-
-SQLite is convenient for small and medium repositories because it needs no separate database server, keeps data in one ignored runtime file, and has a smaller administration surface. MySQL/MariaDB remains useful for remote database hosting, centralized backups, monitoring, or heavier concurrent workloads.
-
-## Download count limitation
-
-Download counting is **not implemented**. The Synology Package Center response currently contains demonstration values only:
-
-- `download_count`: `2026`
-- `recent_download_count`: `0`
-
-Their initial values are hard-coded in `lib/SSpkS/Output/JsonOutput.php`, inside `packageToJson()`. They are not stored, incremented, deduplicated, or calculated over a time window. Change those two values there if different placeholders are required; do not present them as real statistics.
-
-## Security checklist
-
-- Replace all example URLs and passwords.
-- Block direct HTTP access to `conf/`, `lib/`, `vendor/`, `runtime/`, and template sources.
-- Keep SQLite files and refresh checkpoints under `runtime/`; these are excluded by `.gitignore`.
-- Do not expose MySQL/MariaDB directly to the public internet.
-- Review every third-party SPK and its license before publication.
-- Keep generated cache files, databases, logs, `.env`, and `.spk` packages out of Git.
-
-## Accessibility
-
-The Material interface targets WCAG 2.2 Level AA. It includes a skip link, visible keyboard focus, semantic landmarks and labels, accessible expandable package details, screen-reader status announcements, touch-friendly controls, reduced-motion support, and contrast-aware light and dark palettes. Accessibility announcements introduced by this project are localized in all 21 language packs.
-
-After deployment, test the rendered site with real package data and its public URL. Navigate the primary navigation, palette and language controls, model search, package details, downloads, dialogs, and index page using only a keyboard; test desktop and mobile layouts at 200% zoom; and verify names, focus order, and status announcements with at least one common screen reader. Automated checks do not replace testing with disabled users and should not be treated alone as a legal conformance claim.
-
-## Main differences from upstream
-
-| Area | jdel/sspks upstream | SSPKS-IMNKS |
-| --- | --- | --- |
-| Target | General SSPKS base | DSM 7-focused validation and presentation |
-| Database | No database; package metadata is read from files | MySQL/MariaDB and SQLite3 index backends |
-| Languages | Upstream language set | 21 UI language packs and persistent switching |
-| Interface | Original theme | Responsive Material UI, palettes, model tools, ads, configurable footer |
-| Refresh | Standard indexing | Streaming hash reads, progress events, checkpoints, resume support |
-| Browser assets | Direct package assets | Generated WebP thumbnails and optional URL obfuscation |
-| PHP 7.4 deployment | Composer installation required | Prebuilt PHP 7.4 `vendor/` included |
-
-This is a derivative project, not a drop-in patch set. Review configuration and database migration requirements before replacing an existing installation.
-
-## License and credits
-
-Derived from [jdel/sspks](https://github.com/jdel/sspks). Distributed under [GNU GPL v3](LICENSE) (`GPL-3.0-only`). Third-party SPK packages retain their own licenses.
+Derived from [jdel/sspks](https://github.com/jdel/sspks), licensed under [GNU GPL v3](LICENSE). Third-party SPKs retain their own licenses.

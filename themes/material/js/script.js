@@ -85,7 +85,7 @@
         });
     }
 
-    /* Package details and notice dialogs */
+    /* Package details */
     function setupDetails() {
         document.addEventListener('click', function (event) {
             var target = event.target instanceof Element ? event.target : null;
@@ -112,32 +112,6 @@
             }
             details.classList.toggle('spk-details-hidden', expanded);
         });
-    }
-
-    function setupNoticeDialog(buttonSelector, dialogId) {
-        var dialog = document.getElementById(dialogId);
-        var button = document.querySelector(buttonSelector);
-        if (!dialog || !button) {
-            return;
-        }
-        button.addEventListener('click', function () {
-            if (typeof dialog.showModal === 'function') {
-                dialog.showModal();
-            } else {
-                dialog.setAttribute('open', '');
-            }
-        });
-        dialog.addEventListener('click', function (event) {
-            var target = event.target instanceof HTMLButtonElement ? event.target : null;
-            if (target && target.value === 'confirm' && typeof dialog.close !== 'function') {
-                dialog.removeAttribute('open');
-            }
-        });
-    }
-
-    function setupNotices() {
-        setupNoticeDialog('[data-open-dsm6-notice]', 'dsm6-notice');
-        setupNoticeDialog('[data-open-safety-notice]', 'safety-notice');
     }
 
     /* Address copy and back-to-top */
@@ -221,7 +195,8 @@
             var slides = Array.from(carousel.querySelectorAll('[data-ad-slide]'));
             var dots = Array.from(carousel.querySelectorAll('[data-ad-index]'));
 
-            carousel.hidden = true;
+            carousel.hidden = false;
+            carousel.setAttribute('aria-busy', 'true');
             slides.forEach(function (slide) {
                 slide.hidden = true;
                 slide.classList.remove('is-active');
@@ -377,10 +352,13 @@
                 loadSlide(0)
                     .then(function () {
                         showLoadedSlide(0);
+                        carousel.setAttribute('aria-busy', 'false');
                         carousel.hidden = false;
                         startRotation();
                     })
                     .catch(function () {
+                        carousel.hidden = true;
+                        carousel.removeAttribute('aria-busy');
                         // Hide the advertisement area if the first image fails.
                     });
             });
@@ -414,6 +392,8 @@
         });
         var count = browser.querySelector('[data-model-count]');
         var toggle = browser.querySelector('[data-model-toggle]');
+        var emptyState = browser.querySelector('[data-model-empty]');
+        var clearSearch = browser.querySelector('[data-model-clear]');
         var mobileQuery = window.matchMedia('(max-width: 599px)');
         var expanded = browser.getAttribute('data-show-all') === 'true';
         var renderedOrder = null;
@@ -458,6 +438,8 @@
             if (count) {
                 count.textContent = t('shown_count', 'Showing {visible} / {total}', { visible: visible, total: matchedCards.length });
             }
+            if (emptyState) { emptyState.hidden = keyword === '' || matchedCards.length > 0; }
+            if (clearSearch) { clearSearch.hidden = keyword === ''; }
             if (toggle) {
                 toggle.hidden = keyword !== '' || matchedCards.length <= visibleLimit();
                 toggle.textContent = expanded ? t('show_less', 'Show fewer models') : t('show_all', 'Show all models');
@@ -482,6 +464,13 @@
                 if (!expanded) {
                     browser.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
+            });
+        }
+        if (clearSearch) {
+            clearSearch.addEventListener('click', function () {
+                input.value = '';
+                filterModels();
+                input.focus();
             });
         }
         onMediaChange(mobileQuery, filterModels);
@@ -600,7 +589,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         setupLanguageMenu();
         setupDetails();
-        setupNotices();
         setupCopyButton();
         setupBackToTop();
         setupAdvertisementCarousel();

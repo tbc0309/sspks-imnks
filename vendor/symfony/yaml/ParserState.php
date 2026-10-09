@@ -19,11 +19,11 @@ use Symfony\Component\Yaml\Tag\TaggedValue;
  */
 final class ParserState
 {
-    public $maxNestingLevel = Parser::DEFAULT_MAX_NESTING_LEVEL;
-    public $currentNestingLevel = 0;
-    public $maxAliasesForCollections = Parser::DEFAULT_MAX_ALIASES_FOR_COLLECTIONS;
-    public $collectionAliasCount = 0;
-    public $aliasesEnabled = true;
+    public int $maxNestingLevel = Parser::DEFAULT_MAX_NESTING_LEVEL;
+    public int $currentNestingLevel = 0;
+    public int $maxAliasesForCollections = Parser::DEFAULT_MAX_ALIASES_FOR_COLLECTIONS;
+    public int $collectionAliasCount = 0;
+    public bool $aliasesEnabled = true;
 
     public function reset(): void
     {
@@ -37,7 +37,7 @@ final class ParserState
         if (++$this->currentNestingLevel > $this->maxNestingLevel) {
             --$this->currentNestingLevel;
 
-            throw new ParseException(sprintf('Maximum nesting depth of %d exceeded.', $this->maxNestingLevel), $line, $snippet, $filename);
+            throw new ParseException(\sprintf('Maximum nesting depth of %d exceeded.', $this->maxNestingLevel), $line, $snippet, $filename);
         }
     }
 
@@ -48,10 +48,7 @@ final class ParserState
         }
     }
 
-    /**
-     * @param mixed $refValue
-     */
-    public function countAlias($refValue, int $line, ?string $snippet, ?string $filename): void
+    public function countAlias(mixed $refValue, int $line, ?string $snippet, ?string $filename): void
     {
         if (!$this->aliasesEnabled) {
             throw new ParseException('Aliases are disabled.', $line, $snippet, $filename);
@@ -66,7 +63,7 @@ final class ParserState
         }
 
         if (++$this->collectionAliasCount > $this->maxAliasesForCollections) {
-            throw new ParseException(sprintf('Maximum number of collection aliases (%d) exceeded. This limit can be increased via the Parser constructor.', $this->maxAliasesForCollections), $line, $snippet, $filename);
+            throw new ParseException(\sprintf('Maximum number of collection aliases (%d) exceeded. This limit can be increased via the Parser constructor.', $this->maxAliasesForCollections), $line, $snippet, $filename);
         }
     }
 }

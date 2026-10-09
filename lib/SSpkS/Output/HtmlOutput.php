@@ -2,9 +2,9 @@
 
 namespace SSpkS\Output;
 
-use Mustache_Engine;
-use Mustache_Loader_FilesystemLoader;
-use Mustache_Logger_StreamLogger;
+use Mustache\Engine;
+use Mustache\Loader\FilesystemLoader;
+use Mustache\Logger\StreamLogger;
 use SSpkS\Config;
 use SSpkS\Language;
 use SSpkS\SiteStatistics;
@@ -13,7 +13,7 @@ final class HtmlOutput
 {
     private Config $config;
     private Language $language;
-    private Mustache_Engine $mustache;
+    private Engine $mustache;
     private array $tplVars = [];
     private string $template = '';
 
@@ -25,11 +25,12 @@ final class HtmlOutput
         $tplBase  = $this->config->basePath . DIRECTORY_SEPARATOR . $this->config->paths['themes'];
         $tplBase .= $this->config->site['theme'] . DIRECTORY_SEPARATOR . 'templates';
 
-        $this->mustache = new Mustache_Engine([
-            'loader'          => new Mustache_Loader_FilesystemLoader($tplBase),
-            'partials_loader' => new Mustache_Loader_FilesystemLoader($tplBase . '/partials'),
+        $this->mustache = new Engine([
+            'loader'          => new FilesystemLoader($tplBase),
+            'partials_loader' => new FilesystemLoader($tplBase . '/partials'),
             'charset'         => 'utf-8',
-            'logger'          => new Mustache_Logger_StreamLogger('php://stderr'),
+            'entity_flags'    => ENT_QUOTES,
+            'logger'          => new StreamLogger('php://stderr'),
         ]);
 
         $siteName = trim((string) ($this->config->site['name'] ?? 'SSPkS'));
@@ -43,6 +44,7 @@ final class HtmlOutput
         if (isset($_GET['packages']) && $_GET['packages'] === 'fulllist') {
             $canonicalUrl .= '?packages=fulllist';
         } elseif (isset($_GET['arch'])
+            && is_string($_GET['arch'])
             && preg_match('/^[a-z0-9_]+$/i', trim((string) $_GET['arch'])) === 1) {
             $canonicalUrl .= '?arch=' . rawurlencode(strtolower(trim((string) $_GET['arch'])));
         }
@@ -145,6 +147,33 @@ final class HtmlOutput
             $advertisementItem['position'] = $index + 1;
         }
         unset($advertisementItem);
+        $advertisementWidth = 1200;
+        $advertisementHeight = 240;
+        $imageUrl = (string) ($advertisementItems[0]['image_url'] ?? '');
+        $imageHost = parse_url($imageUrl, PHP_URL_HOST);
+        if ($imageUrl !== '' && ($imageHost === null || $imageHost === parse_url($this->config->baseUrl, PHP_URL_HOST))) {
+            $imagePath = rawurldecode((string) parse_url($imageUrl, PHP_URL_PATH));
+            $baseUrlPath = (string) $this->config->baseUrlRelative;
+            if ($baseUrlPath !== '/' && strpos($imagePath, $baseUrlPath) === 0) {
+                $imagePath = substr($imagePath, strlen($baseUrlPath));
+            }
+            $localImage = realpath($this->config->basePath . DIRECTORY_SEPARATOR . ltrim($imagePath, '/\\'));
+            $localRoot = realpath($this->config->basePath);
+            $rootPrefix = $localRoot === false ? '' : $localRoot . DIRECTORY_SEPARATOR;
+            $inside = $localImage !== false && $rootPrefix !== ''
+                && (DIRECTORY_SEPARATOR === '\\'
+                    ? strncasecmp($localImage, $rootPrefix, strlen($rootPrefix)) === 0
+                    : strpos($localImage, $rootPrefix) === 0);
+            if ($inside && is_file($localImage) && filesize($localImage) <= 20 * 1024 * 1024) {
+                $dimensions = @getimagesize($localImage);
+                if (is_array($dimensions) && $dimensions[0] > 0 && $dimensions[1] > 0
+                    && $dimensions[0] <= 8192 && $dimensions[1] <= 8192) {
+                    [$advertisementWidth, $advertisementHeight] = $dimensions;
+                }
+            }
+        }
+        $this->setVariable('advertisementWidth', $advertisementWidth);
+        $this->setVariable('advertisementHeight', $advertisementHeight);
         $this->setVariable('advertisementEnabled', $this->config->advertisement['enabled'] && $advertisementItems !== []);
         $this->setVariable('advertisementItems', $advertisementItems);
         $this->setVariable('advertisementHasMultiple', count($advertisementItems) > 1);

@@ -1,53 +1,84 @@
 # SSPKS-IMNKS
 
-[English](README.en.md) | [简体中文](README.md)
+[English](README.en.md) | 简体中文
 
-SSPKS-IMNKS 是一个面向 Synology DSM 7 的多语言自建 SPK 套件源，衍生自 [jdel/sspks](https://github.com/jdel/sspks)。
+面向 Synology DSM 7 的多语言自建 SPK 套件源，衍生自 [jdel/sspks](https://github.com/jdel/sspks)。支持 21 种界面语言、机型/架构筛选、普通与官方 keytype 3 SPK、增量索引及断点恢复。
 
-**原始站点：** 访问 [spk7.imnks.com](https://spk7.imnks.com/) 查看项目作者维护的 SSPKS-IMNKS 实际运行站点。
+[作者维护的站点](https://spk7.imnks.com/)
 
-![SSPKS-IMNKS 演示界面](docs/images/sspks-imnks-demo.png)
+![界面预览](docs/images/sspks-imnks-demo.png)
 
-## 版本特色
 
-- 21 种完整界面语言，支持浏览器识别、固定首次默认语言和 Cookie 记忆切换结果。
-- 简体中文和英文由项目直接维护，其余语言由 AI 翻译，可能仍需母语使用者审校。
-- 同时支持 MySQL/MariaDB 与 SQLite3。演示配置默认使用 SQLite；只有几百个套件时通常更简单合适。
-- Material 响应式界面，包含 4 套配色、机型搜索、优先机型、套件卡片渐进加载、运行环境标识、Synology 标志、可配置页脚和广告轮播。
-- DSM 7 元数据校验、安全读取 SPK 归档、机型/架构筛选和多语言套件说明。
-- 索引更新每处理 50 个套件保存检查点，MD5 使用 8 MiB 流式分块读取，可在连接中断后继续。
-- MySQL/MariaDB 和 SQLite 均以事务替换索引，写入失败时保留原索引。
-- 自动生成 WebP 网页缩略图，可选混淆图片和 SPK 下载地址。
+## 功能概览
 
-## 环境要求
+- 21 种界面语言，跟随浏览器或使用配置语言，支持手动切换与 Cookie 记忆。
+- Material 响应式界面、四套配色、机型搜索、优先机型与渐进加载套件卡片。
+- 按机型、架构、DSM 版本及稳定/测试渠道筛选套件，支持套件多语言名称与说明。
+- 普通 TAR SPK 与官方 keytype 3 加密 SPK 解析，显示官方标识及运行环境标识。
+- SQLite 或 MySQL/MariaDB 索引；增量复用 MD5、分段完整校验、实时进度和任务恢复。
+- 网页图片转换、可选网页下载及地址混淆，可配置页脚和广告轮播。
 
-- PHP 7.4 或更高版本
-- PHP 扩展：`json`、`pdo`、`phar`，以及 `pdo_sqlite` 和/或 `pdo_mysql`
-- PHP-FPM 或同类 PHP Web 环境
-- PHP 对 `cache/`、`runtime/` 具有写权限
+简体中文与英文直接维护，其余语言由 AI 翻译，欢迎提交措辞改进。
 
-仓库内的 `vendor/` 已使用 PHP 7.4 拉取，可直接用于 PHP 7.4。其他 PHP 版本请在对应环境重新执行：
+## 1. 准备环境
 
-```bash
-composer install --no-dev --classmap-authoritative --no-interaction
-```
+- PHP 8.4 或更高版本，搭配 PHP-FPM。
+- 扩展：json、pdo、pdo_sqlite、pdo_mysql、phar、sodium、mbstring；图片转换使用支持 WebP 的 GD 或 Imagick。
+- PHP 对 cache/、runtime/ 有写权限。即使主索引使用 MySQL，任务恢复仍需要 pdo_sqlite。
 
-## 快速部署
+发布包包含 vendor/，无需重新安装依赖。
 
-1. 将项目复制到网站目录。
-2. 修改 `conf/sspks.yaml` 和 `conf/database.yaml`。
-3. 上线前更换演示网址、管理密码和数据库密码。
-4. 将 DSM 7 `.spk` 文件放入 `packages/`。
-5. 赋予 PHP 对 `cache/`、`runtime/` 的写权限。
-6. 修改 `update.action`，访问 `/?action={配置值}`，输入管理密码更新索引。
+## 2. 部署并配置
 
-SQLite 会自动创建表结构；MySQL/MariaDB 请导入 `wd_spk2.sql`。`wd_spk2.sqlite.sql` 是 SQLite 表结构参考。
+1. 下载 Release 中的发布 ZIP，解压到网站目录。
+2. 编辑 conf/sspks.yaml：将 site.base_url 改为公开网址，设置不易猜测的 update.action。需要网页下载时，将 browser_download.enabled 设为 true。
+3. 编辑 conf/database.yaml：设置 management_password；默认使用 SQLite，自动创建表。使用 MySQL/MariaDB 时填写数据库信息并导入 wd_spk2.sql，表前缀与配置保持一致。
+4. 设置下方 Nginx 路由与访问限制，更换域名、网站目录、PHP-FPM Socket 和下载 alias。启用 HTTPS，执行 nginx -t 后重载。
+5. 将 robots.txt 中的 Sitemap 改为实际网址。
 
-> **索引更新内存提醒：** 更新套件索引需要读取并解析 SPK 元数据、计算文件哈希并暂存待写入的数据，套件数量较多时会占用较多 PHP 内存。建议将执行更新任务的 PHP `memory_limit` 临时或永久设置为至少 `1024M`，否则任务可能因内存耗尽而在完成前中断。通过网页更新时请检查 PHP-FPM 的配置，通过命令行更新时请检查 CLI PHP 的配置；两者可能使用不同的 `php.ini`。修改永久配置后请重载或重启对应的 PHP-FPM 服务。
+语言默认跟随浏览器，可用 language.fixed 设置默认语言（如 chs、enu），language.show_selector 控制切换菜单。其他界面选项见 conf/sspks.yaml 注释。
 
-## 推荐的 Nginx 配置
 
-项目已经包含自己的 404 页面，因此 Nginx 应把不存在的文件交给 `index.php`，真实静态资源仍由 Nginx 直接提供。下面的示例同时保护配置、源码、依赖和运行数据，并提供浏览器 SPK 地址混淆所需的内部下载位置。
+### 常用配置
+
+网站设置位于 conf/sspks.yaml，数据库与管理密码位于 conf/database.yaml。
+
+| 配置 | 用途 |
+| --- | --- |
+| site.name / site.base_url | 网站名称与公开网址，网址保留末尾斜杠 |
+| update.action | 索引管理入口，3–128 位字母、数字、点、下划线或连字符 |
+| language.fixed / language.show_selector | 默认语言与语言切换菜单 |
+| paths.packages | SPK 存放目录，默认 packages/ |
+| appearance.default_palette | 默认配色：teal、ocean、violet、dark |
+| appearance.show_runtime_badges | 是否显示 Docker、PHP、Python 等标识 |
+| models.show_all_by_default / models.priority_models | 首屏机型展示与优先机型 |
+| browser_download.enabled | 允许网页下载；不影响 DSM 套件中心下载 |
+| browser_url_obfuscation | 图片与网页 SPK 下载地址混淆 |
+| advertisement / footer | 广告轮播与页脚链接 |
+
+语言代码：chs、cht、csy、dan、enu、fre、ger、hun、ita、jpn、krn、nld、nor、plk、ptb、ptg、rus、spn、sve、tha、trk。language.fixed 留空时自动识别；配置固定语言并关闭选择器时强制使用该语言。
+
+网页 SPK 地址混淆依赖 Nginx 内部下载位置；修改套件目录时，应同时修改 paths.packages 与 alias。默认关闭网页下载，DSM 套件中心仍可使用。
+
+## 3. 添加套件并更新索引
+
+1. 将 DSM 7 .spk 文件放入 packages/，或 paths.packages 配置的目录。
+2. 打开 https://您的域名/?action=配置的值，输入管理密码，点击“更新索引”。
+3. 更新完成后检查网页套件列表。
+4. 在 DSM“套件中心 → 设置 → 套件来源 → 新增”中填写名称与站点公开网址。
+
+日常更新仅处理新增或变化的 SPK，按大小和修改时间复用未变化文件的 MD5；修改 cache/ 中对应 .nfo 后，同样点击“更新索引”更新元数据。“完整校验”重新计算全部 MD5。任务分批执行，关闭页面后可再次输入密码继续；解析失败或套件目录为空时保留已有索引。
+
+套件中心响应按机型/架构、DSM 基础版本构建号、语言与更新渠道缓存，不区分 Update 补丁序号；一小时有效，索引完成后清理。
+
+
+成功数包含新增、变更和未变化，删除单独计数；总计是扫描到的 SPK 数。每个套件独立写入，已经完成的记录先行生效。若文件内容改变但大小和修改时间相同，请使用“完整校验”。
+
+提取文件使用 SPK 文件名，.nfo 为元数据，.source 为失效依据，向导标记与图片另存；通常无需编辑 .source。缓存保留最多 4096 个套件中心响应槽，关注 runtime/cache 的磁盘占用。
+
+## 4. Nginx 配置
+
+以下示例部署在域名根目录。公开 cache/ 仅允许图片；内部下载 alias 必须对应套件目录，且保留 internal。CDN 应保留更新接口的 JSON 错误响应，不缓存管理请求。
 
 ```nginx
 server {
@@ -56,32 +87,28 @@ server {
     root /var/www/sspks-imnks;
     index index.php;
 
-    # 真实文件直接返回；未知地址交给程序路由并显示项目自带的 404 页面。
     location / {
         try_files $uri $uri/ /index.php?$query_string;
     }
 
-    # 只允许入口文件执行 PHP。
     location = /index.php {
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root/index.php;
         fastcgi_param HTTP_AUTHORIZATION $http_authorization;
-        fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        fastcgi_intercept_errors off;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
     }
 
     location ~ \.php$ {
         return 404;
     }
 
-    # 浏览器下载地址混淆使用 X-Accel-Redirect；必须保持 internal。
-    # alias 要与 conf/sspks.yaml 中的 paths.packages 对应。
     location ^~ /_sspks_download/ {
         internal;
         alias /var/www/sspks-imnks/packages/;
         default_type application/octet-stream;
     }
 
-    # 禁止公开访问配置、源码、依赖和运行数据。
     location ~ ^/(?:conf|languages|lib|runtime|vendor)(?:/|$) {
         deny all;
     }
@@ -98,77 +125,41 @@ server {
         deny all;
     }
 
-    # DSM 套件中心需要访问 SPK 文件，因此不要封锁 packages 目录，只关闭目录列表。
     location ^~ /packages/ {
         autoindex off;
         try_files $uri =404;
         types { application/octet-stream spk; }
     }
 
+    location ^~ /cache/ {
+        if ($uri !~* \.(?:png|webp)$) { return 404; }
+        autoindex off;
+        try_files $uri =404;
+        add_header X-Content-Type-Options nosniff always;
+    }
+
     client_max_body_size 16m;
 }
 ```
 
-请按服务器实际情况修改域名、项目目录、PHP-FPM Socket 和套件目录 alias。如果项目部署在域名的子目录，还要同步调整 `site.base_url` 和对应的 Nginx location。重载前先执行 `nginx -t`。不要使用 `error_page 404 /index.php`；这里的 `try_files` 能让程序正确识别路由并显示项目自带的 404 页面。
+部署到子目录时，相应调整 site.base_url、Nginx location 和 alias。
 
-## 重要配置
+## 5. 升级与维护
 
-### 语言
+- 备份配置、索引数据库及手工编辑的 .nfo。
+- 更新程序时保留 conf/、套件目录、cache/ 和 runtime/，随后更新索引。解析器或 SPK 改变可能重新生成 .nfo。
+- runtime/ 保存数据库和任务，cache/ 保存提取内容；不要公开配置、源码、日志及缓存元数据，定期关注磁盘空间。
+- 官方加密 SPK 需要 sodium，目前支持 keytype 3；其他历史或未来格式可能不支持。
+- 下载计数目前为占位值，并非实际下载量。
 
-`conf/sspks.yaml` 中的 `language.fixed` 决定首次访问语言；留空时根据浏览器语言自动选择，无法匹配则使用英文。`language.show_selector: true` 时允许访客切换并用 Cookie 记住；设为 `false` 时隐藏选择器并强制使用配置语言。
 
-支持：`chs`、`cht`、`csy`、`dan`、`enu`、`fre`、`ger`、`hun`、`ita`、`jpn`、`krn`、`nld`、`nor`、`plk`、`ptb`、`ptg`、`rus`、`spn`、`sve`、`tha`、`trk`。
+## 常见问题
 
-### 网站地址与 robots.txt
+- **密码错误或限流：** 检查 management_password 或 SSPKS_UPDATE_TOKEN 环境变量。错误密码返回 401；连续失败触发 429 后等待一分钟，认证失败不会开始索引任务。
+- **更新中断：** 重新打开原入口并输入密码，可继续未完成任务。确保 runtime/ 可写、pdo_sqlite 已启用；CDN 不要替换错误响应为 HTML。
+- **套件未显示：** 确认路径、.spk 文件、索引结果、架构和 DSM 最低版本要求；解析错误查看服务器日志。
+- **图片或下载失败：** 检查 cache/ 写权限、图片扩展、内部下载 alias 与实际套件目录。浏览器下载开关不影响 DSM 下载。
 
-演示配置统一使用 `https://packages.example.com/`。正式部署前，请在 `conf/sspks.yaml` 替换为您的公开网址，同时将 `robots.txt` 的 `Sitemap` 改成真实域名。保留示例值不会泄露个人网站，但搜索引擎也无法发现正确的站点地图。
+## 许可
 
-### 私有索引更新参数
-
-在 `conf/sspks.yaml` 设置不易猜测的 `update.action`，然后访问 `https://您的域名/?action={配置值}` 更新索引。该值必须为 3–128 位，只能包含字母、数字、点、下划线和连字符，系统仅接受配置值。自定义参数可减少管理页被常规扫描发现的机会，管理密码和认证频率限制仍是主要防护。
-
-### 数据库选择
-
-SQLite 无需单独运行数据库服务，数据集中在一个已被 Git 忽略的运行时文件中，维护和暴露面更小，适合中小型套件源。需要远程数据库、集中备份监控或更高并发时，可选择 MySQL/MariaDB。
-
-## 下载计数尚未完成
-
-下载计数目前只是演示值：
-
-- `download_count`：`2026`
-- `recent_download_count`：`0`
-
-初始值位于 `lib/SSpkS/Output/JsonOutput.php` 的 `packageToJson()`。它们不会写入数据库、不会在下载后增加，也没有访客去重或时间窗口统计。若需更换占位数字，请直接修改这两个值，不要将其当作真实下载量。
-
-## 安全检查
-
-- 更换全部示例网址与密码。
-- 禁止通过 HTTP 直接访问 `conf/`、`lib/`、`vendor/`、`runtime/` 和模板源码。
-- SQLite 数据库与更新检查点保存在 `runtime/`；这些文件已被 `.gitignore` 排除。
-- 不要把 MySQL/MariaDB 直接暴露到公网。
-- 发布第三方 SPK 前检查来源、安全性及其许可证。
-- 不要提交缓存、数据库、日志、`.env` 和 `.spk` 文件。
-
-## 无障碍支持
-
-Material 界面以 WCAG 2.2 AA 为无障碍设计目标，包含跳到主要内容、键盘焦点提示、语义化页面地标和标签、可访问的套件详情展开、读屏状态播报、适合触控的操作区域、减少动画偏好以及兼顾对比度的深浅配色。本项目新增的无障碍提示已覆盖全部 21 种语言包。
-
-部署后仍应使用真实套件数据和公开网址检查最终页面：仅使用键盘操作主要导航、配色和语言切换、机型搜索、套件详情、下载、弹窗及索引更新页；在桌面与手机布局下放大至 200%；至少使用一种常见屏幕阅读器核对控件名称、焦点顺序和动态提示。自动化检查不能代替残障用户测试，也不应单独作为法律意义上的完整合规声明。
-
-## 相比上游 jdel/sspks
-
-| 项目 | jdel/sspks 上游 | SSPKS-IMNKS |
-| --- | --- | --- |
-| 目标 | 通用 SSPKS 基础 | 面向 DSM 7 的校验与展示 |
-| 数据库 | 不使用数据库，直接从文件读取套件信息 | MySQL/MariaDB 与 SQLite3 索引后端 |
-| 多语言 | 上游语言方案 | 21 种界面语言与记忆切换；非中英文由 AI 翻译 |
-| 界面 | 原版主题 | Material 响应式界面、配色、机型工具、广告、可配置页脚 |
-| 索引更新 | 标准索引流程 | 流式校验、实时进度、检查点与断点继续 |
-| 网页资源 | 直接使用套件资源 | WebP 缩略图与可选地址混淆 |
-| PHP 7.4 | 需要 Composer 安装 | 已包含 PHP 7.4 生成的 `vendor/` |
-
-本项目是衍生版本，不是可直接覆盖上游的补丁集。替换现有部署前请检查配置与数据库迁移要求。
-
-## 许可与致谢
-
-本项目衍生自 [jdel/sspks](https://github.com/jdel/sspks)，以 [GNU GPL v3](LICENSE)（`GPL-3.0-only`）发布。第三方 SPK 套件仍遵循各自许可证。
+基于 [jdel/sspks](https://github.com/jdel/sspks)，使用 [GNU GPL v3](LICENSE)。第三方 SPK 遵循各自许可证。

@@ -1,0 +1,23 @@
+<?php
+require dirname(__DIR__).'/vendor/autoload.php';
+use SSpkS\Config; use SSpkS\Device\DeviceList; use SSpkS\Handler\SynologyHandler; use SSpkS\Package\Package; use think\facade\Cache; use think\facade\Db;
+$repo=dirname(__DIR__); $temp=sys_get_temp_dir().'/sspks-load-'.bin2hex(random_bytes(8));
+foreach(['conf','runtime','cache','packages','packages2025','languages'] as $d)mkdir($temp.'/'.$d,0700,true);
+foreach(glob($repo.'/conf/*.yaml') as $f)copy($f,$temp.'/conf/'.basename($f));
+foreach(glob($repo.'/languages/*.php') as $f)copy($f,$temp.'/languages/'.basename($f));
+file_put_contents($temp.'/conf/database.yaml',"database:\n  type: sqlite\n  database: runtime/load.sqlite\n  prefix: load_\nmanagement_password: test-only\n");
+putenv('SSPKS_DB_TYPE=sqlite');putenv('SSPKS_DB_SQLITE_PATH='.$temp.'/runtime/load.sqlite'); chdir($temp);
+$_SERVER['HTTP_HOST']='localhost';$_SERVER['REQUEST_URI']='/';$_SERVER['REQUEST_METHOD']='GET';
+$config=Config::getInstance($temp);$config->baseUrl='http://localhost/';
+$tar=$temp.'/fixture.tar';$a=new PharData($tar);$a->addFromString('INFO',"package=\"Load\"\nversion=\"1.0-1\"\ndisplayname=\"Load\"\narch=\"noarch\"\nos_min_ver=\"7.0-40000\"\ndescription=\"Load fixture\"\nmaintainer=\"Test\"\n");unset($a);
+rename($tar,$temp.'/'.$config->paths['packages'].'fixture.spk');$job=new SSpkS\IndexUpdateJob($config);$state=$job->start('incremental');for($i=0;$state['type']!=='complete'&&$i<100;$i++)$state=$job->step($state['job']);
+if($state['type']!=='complete'||$state['failed'])throw new RuntimeException('Fixture failed');
+$row=Db::name('spk')->select()->toArray()[0];$original=unserialize($row['params'],['allowed_classes'=>[Package::class]]);unset($row['id']);
+Db::startTrans();for($i=1;$i<500;$i++){ $item=$row;$package=clone $original;$package->package='Load'.$i;$item['package']=$package->package;$item['spk']='fixture'.$i.'.spk';$item['params']=serialize($package);Db::name('spk')->insert($item);}Db::commit();Cache::clear();
+$devices=[];foreach((new DeviceList($config))->getDevices() as $device){$names=str_contains($device['name'],'(RP)')?[str_replace('(RP)','',$device['name']),str_replace('(RP)','RP',$device['name'])]:[$device['name']];foreach($names as $name){$d=$device;$d['name']=$name;$devices[]=$d;}}$handler=new SynologyHandler($config);$sig=new ReflectionMethod($handler,'responseCacheSignature');$cached=new ReflectionMethod($handler,'cachedResponse');$slots=(new ReflectionClass($handler))->getConstant('RESPONSE_CACHE_SLOTS');$cases=[];$oldSlots=[];$newSlots=[];
+foreach($devices as $device)foreach(['chs','enu'] as $language)foreach(['69057','72806'] as $build){$unique='synology_'.$device['arch'].'_'.strtolower($device['name']);$signature=$sig->invoke($handler,$unique,$device['arch'],'7.2-'.$build,'stable',$language);$cases[]=[$unique,$device['arch'],$language,$build,$signature];$oldSlots[hexdec(substr($signature,0,2))%128]=$signature;$newSlots[hexdec(substr($signature,0,4))%$slots]=$signature;}
+$times=[];$hits=0;foreach([0,1] as $pass)foreach($cases as [$unique,$arch,$language,$build,$signature]){$key='synology_response_v2_'.(hexdec(substr($signature,0,4))%$slots);if($pass===1&&$cached->invoke($handler,$key,$signature)!==null)$hits++;$_GET=['unique'=>$unique,'arch'=>$arch,'language'=>$language,'major'=>'7','minor'=>'2','build'=>$build,'micro'=>(string)$pass,'nano'=>(string)($pass===0?1:3)];$start=microtime(true);ob_start();$handler->handle();$response=ob_get_clean();$data=json_decode($response,true,512,JSON_THROW_ON_ERROR);if(count($data['packages']??[])!==500)throw new RuntimeException('Model cache response mismatch '.$unique);$times[$pass][]=(microtime(true)-$start)*1000;}
+foreach($times as &$t)sort($t);unset($t);$count=count($cases);if($hits/$count<0.6)throw new RuntimeException('Unexpected low hit rate');
+$files=0;$bytes=0;foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($temp.'/runtime/cache',FilesystemIterator::SKIP_DOTS)) as $f){$files++;$bytes+=$f->getSize();}if($files>$slots+5)throw new RuntimeException('Unbounded response cache');
+echo json_encode(['models'=>count($devices),'packages'=>500,'requests'=>$count*2,'old_retained'=>count($oldSlots),'new_retained'=>count($newSlots),'warm_hits'=>$hits,'cold_p95_ms'=>$times[0][(int)floor($count*.95)],'warm_p95_ms'=>$times[1][(int)floor($count*.95)],'cache_files'=>$files,'cache_bytes'=>$bytes,'peak_memory_mb'=>memory_get_peak_usage(true)/1048576],JSON_PRETTY_PRINT)."\n";
+$remove=function($dir)use(&$remove){foreach(new FilesystemIterator($dir) as $f){if($f->isDir()&&!$f->isLink())$remove($f->getPathname());else unlink($f->getPathname());}rmdir($dir);};chdir($repo);unset($job);Db::connect()->close();$remove($temp);

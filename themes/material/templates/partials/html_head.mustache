@@ -57,11 +57,11 @@
                     {{/ headerStatistics }}
                     <div class="mdl-layout-spacer"></div>
                     <div class="header-actions">
-                        <div class="palette-switcher" aria-label="Theme" role="group">
-                            <button type="button" class="palette-swatch palette-swatch--teal" data-palette="teal" aria-label="Teal"></button>
-                            <button type="button" class="palette-swatch palette-swatch--ocean" data-palette="ocean" aria-label="Ocean"></button>
-                            <button type="button" class="palette-swatch palette-swatch--violet" data-palette="violet" aria-label="Violet"></button>
-                            <button type="button" class="palette-swatch palette-swatch--dark" data-palette="dark" aria-label="Dark"></button>
+                        <div class="palette-switcher" aria-label="{{ theme }}" role="group">
+                            <button type="button" class="palette-swatch palette-swatch--teal" data-palette="teal" aria-label="{{ theme_teal }}"></button>
+                            <button type="button" class="palette-swatch palette-swatch--ocean" data-palette="ocean" aria-label="{{ theme_ocean }}"></button>
+                            <button type="button" class="palette-swatch palette-swatch--violet" data-palette="violet" aria-label="{{ theme_violet }}"></button>
+                            <button type="button" class="palette-swatch palette-swatch--dark" data-palette="dark" aria-label="{{ theme_dark }}"></button>
                         </div>
 {{# showLanguageSelector }}
                         <div class="language-select" data-language-menu>
@@ -78,7 +78,7 @@
                             </nav>
                         </div>
 {{/ showLanguageSelector }}
-                        <nav class="site-nav" aria-label="Navigation">
+                        <nav class="site-nav" aria-label="{{ navigation }}">
                             <a href="{{ baseUrlRelative }}?packages=fulllist">{{ nav_all_packages }}</a>
                         </nav>
                     </div>

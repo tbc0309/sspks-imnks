@@ -33,6 +33,11 @@ final class BrowserImageObfuscator
                 continue;
             }
 
+            $size = @filesize($source);
+            if ($size === false || $size > 20 * 1024 * 1024) {
+                $this->failureCount++;
+                continue;
+            }
             $extension = strtolower((string) pathinfo($source, PATHINFO_EXTENSION));
             $token = $this->sourceToken($source);
             if ($token === '') {
@@ -59,13 +64,18 @@ final class BrowserImageObfuscator
 
     private function sourceToken(string $source): string
     {
+        $cacheKey = 'image_token_v2_' . hash('sha256',$source . '|' . filesize($source) . '|' . filemtime($source) . '|' . self::TOKEN_VERSION);
+        try { $cached = \think\facade\Cache::get($cacheKey); } catch (\Throwable $e) { $cached = null; }
+        if (is_string($cached) && $cached !== '') { return $cached; }
         $context = hash_init('sha256');
         hash_update($context, self::TOKEN_VERSION);
         if (!hash_update_file($context, $source)) {
             return '';
         }
         $digest = hash_final($context, true);
-        return rtrim(strtr(base64_encode(substr($digest, 0, 9)), '+/', '-_'), '=');
+        $token = rtrim(strtr(base64_encode(substr($digest, 0, 9)), '+/', '-_'), '=');
+        try { \think\facade\Cache::set($cacheKey,$token,86400); } catch (\Throwable $e) {}
+        return $token;
     }
 
     public function clearPublishedImages(): void
@@ -81,6 +91,17 @@ final class BrowserImageObfuscator
         }
     }
 
+    public function prunePublishedImages(int $retentionSeconds = 86400): void
+    {
+        $cutoff = time() - max(3600, $retentionSeconds);
+        foreach (new \DirectoryIterator($this->publishDirectory()) as $entry) {
+            if ($entry->isFile() && !$entry->isLink() && $entry->getExtension() === 'webp'
+                && $entry->getMTime() < $cutoff) {
+                @unlink($entry->getPathname());
+            }
+        }
+    }
+
     public function countPublishedImages(): int
     {
         $files = glob($this->publishDirectory() . DIRECTORY_SEPARATOR . '*.webp');
@@ -89,13 +110,16 @@ final class BrowserImageObfuscator
 
     private function publishWebp(string $source, string $filename, string $sourceExtension): void
     {
+        $this->validateImageDimensions($source);
         $directory = $this->publishDirectory();
         $destination = $directory . DIRECTORY_SEPARATOR . $filename;
         if (is_file($destination)) {
+            touch($destination);
             return;
         }
 
-            // Use a copy so source changes cannot desynchronize the token and content.
+        $this->validateImageDimensions($source);
+        // Use a copy so source changes cannot desynchronize the token and content.
         $temporary = $destination . '.' . bin2hex(random_bytes(6)) . '.tmp';
         try {
             if ($sourceExtension === 'webp') {
@@ -119,8 +143,19 @@ final class BrowserImageObfuscator
         }
     }
 
+    private function validateImageDimensions(string $source): void
+    {
+        $dimensions = @getimagesize($source);
+        if ($dimensions === false || $dimensions[0] < 1 || $dimensions[1] < 1
+            || $dimensions[0] > 8192 || $dimensions[1] > 8192
+            || $dimensions[0] * $dimensions[1] > 16777216) {
+            throw new \RuntimeException('Image dimensions exceed the decoding limit');
+        }
+    }
+
     private function convertToWebp(string $source, string $destination): void
     {
+        $this->validateImageDimensions($source);
         if (function_exists('imagecreatefromstring') && function_exists('imagewebp')) {
             $contents = @file_get_contents($source);
             $image = $contents === false ? false : @imagecreatefromstring($contents);

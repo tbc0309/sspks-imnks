@@ -2,33 +2,36 @@
     "packages": [
         {
             "name": "mustache/mustache",
-            "version": "v2.14.2",
-            "version_normalized": "2.14.2.0",
+            "version": "v3.2.0",
+            "version_normalized": "3.2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bobthecow/mustache.php.git",
-                "reference": "e62b7c3849d22ec55f3ec425507bf7968193a6cb"
+                "reference": "bd4fb2e45ac2df0570c0f4da6898054a950d1ed0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bobthecow/mustache.php/zipball/e62b7c3849d22ec55f3ec425507bf7968193a6cb",
-                "reference": "e62b7c3849d22ec55f3ec425507bf7968193a6cb",
+                "url": "https://api.github.com/repos/bobthecow/mustache.php/zipball/bd4fb2e45ac2df0570c0f4da6898054a950d1ed0",
+                "reference": "bd4fb2e45ac2df0570c0f4da6898054a950d1ed0",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.2.4"
+                "php": ">=5.6"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "~1.11",
-                "phpunit/phpunit": "~3.7|~4.0|~5.0"
+                "friendsofphp/php-cs-fixer": "~2.19.3",
+                "yoast/phpunit-polyfills": "^2.0"
             },
-            "time": "2022-08-23T13:07:01+00:00",
+            "time": "2026-05-10T04:13:08+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
-                "psr-0": {
-                    "Mustache": "src/"
-                }
+                "psr-4": {
+                    "Mustache\\": "src/"
+                },
+                "classmap": [
+                    "src/compat.php"
+                ]
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -49,129 +52,9 @@
             ],
             "support": {
                 "issues": "https://github.com/bobthecow/mustache.php/issues",
-                "source": "https://github.com/bobthecow/mustache.php/tree/v2.14.2"
+                "source": "https://github.com/bobthecow/mustache.php/tree/v3.2.0"
             },
             "install-path": "../mustache/mustache"
-        },
-        {
-            "name": "opis/closure",
-            "version": "3.7.0",
-            "version_normalized": "3.7.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/opis/closure.git",
-                "reference": "b1a22a6be71c1263f3ca6e68f00b3fd4d394abc4"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/opis/closure/zipball/b1a22a6be71c1263f3ca6e68f00b3fd4d394abc4",
-                "reference": "b1a22a6be71c1263f3ca6e68f00b3fd4d394abc4",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^5.4 || ^7.0 || ^8.0"
-            },
-            "require-dev": {
-                "jeremeamia/superclosure": "^2.0",
-                "phpunit/phpunit": "^4.0 || ^5.0 || ^6.0 || ^7.0 || ^8.0 || ^9.0"
-            },
-            "time": "2025-07-08T20:30:08+00:00",
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "3.6.x-dev"
-                }
-            },
-            "installation-source": "dist",
-            "autoload": {
-                "files": [
-                    "functions.php"
-                ],
-                "psr-4": {
-                    "Opis\\Closure\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Marius Sarca",
-                    "email": "marius.sarca@gmail.com"
-                },
-                {
-                    "name": "Sorin Sarca",
-                    "email": "sarca_sorin@hotmail.com"
-                }
-            ],
-            "description": "A library that can be used to serialize closures (anonymous functions) and arbitrary objects.",
-            "homepage": "https://opis.io/closure",
-            "keywords": [
-                "anonymous functions",
-                "closure",
-                "function",
-                "serializable",
-                "serialization",
-                "serialize"
-            ],
-            "support": {
-                "issues": "https://github.com/opis/closure/issues",
-                "source": "https://github.com/opis/closure/tree/3.7.0"
-            },
-            "install-path": "../opis/closure"
-        },
-        {
-            "name": "psr/cache",
-            "version": "1.0.1",
-            "version_normalized": "1.0.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/php-fig/cache.git",
-                "reference": "d11b50ad223250cf17b86e38383413f5a6764bf8"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/cache/zipball/d11b50ad223250cf17b86e38383413f5a6764bf8",
-                "reference": "d11b50ad223250cf17b86e38383413f5a6764bf8",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.0"
-            },
-            "time": "2016-08-06T20:24:11+00:00",
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.0.x-dev"
-                }
-            },
-            "installation-source": "dist",
-            "autoload": {
-                "psr-4": {
-                    "Psr\\Cache\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "PHP-FIG",
-                    "homepage": "http://www.php-fig.org/"
-                }
-            ],
-            "description": "Common interface for caching libraries",
-            "keywords": [
-                "cache",
-                "psr",
-                "psr-6"
-            ],
-            "support": {
-                "source": "https://github.com/php-fig/cache/tree/master"
-            },
-            "install-path": "../psr/cache"
         },
         {
             "name": "psr/container",
@@ -231,33 +114,33 @@
         },
         {
             "name": "psr/log",
-            "version": "1.1.4",
-            "version_normalized": "1.1.4.0",
+            "version": "3.0.2",
+            "version_normalized": "3.0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/log.git",
-                "reference": "d49695b909c3b7628b6289db5479a1c204601f11"
+                "reference": "f16e1d5863e37f8d8c2a01719f5b34baa2b714d3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/log/zipball/d49695b909c3b7628b6289db5479a1c204601f11",
-                "reference": "d49695b909c3b7628b6289db5479a1c204601f11",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/f16e1d5863e37f8d8c2a01719f5b34baa2b714d3",
+                "reference": "f16e1d5863e37f8d8c2a01719f5b34baa2b714d3",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.0"
+                "php": ">=8.0.0"
             },
-            "time": "2021-05-03T11:20:27+00:00",
+            "time": "2024-09-11T13:17:53+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.1.x-dev"
+                    "dev-master": "3.x-dev"
                 }
             },
             "installation-source": "dist",
             "autoload": {
                 "psr-4": {
-                    "Psr\\Log\\": "Psr/Log/"
+                    "Psr\\Log\\": "src"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -278,33 +161,33 @@
                 "psr-3"
             ],
             "support": {
-                "source": "https://github.com/php-fig/log/tree/1.1.4"
+                "source": "https://github.com/php-fig/log/tree/3.0.2"
             },
             "install-path": "../psr/log"
         },
         {
             "name": "psr/simple-cache",
-            "version": "1.0.1",
-            "version_normalized": "1.0.1.0",
+            "version": "3.0.0",
+            "version_normalized": "3.0.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/simple-cache.git",
-                "reference": "408d5eafb83c57f6365a3ca330ff23aa4a5fa39b"
+                "reference": "764e0b3939f5ca87cb904f570ef9be2d78a07865"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/simple-cache/zipball/408d5eafb83c57f6365a3ca330ff23aa4a5fa39b",
-                "reference": "408d5eafb83c57f6365a3ca330ff23aa4a5fa39b",
+                "url": "https://api.github.com/repos/php-fig/simple-cache/zipball/764e0b3939f5ca87cb904f570ef9be2d78a07865",
+                "reference": "764e0b3939f5ca87cb904f570ef9be2d78a07865",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.0"
+                "php": ">=8.0.0"
             },
-            "time": "2017-10-23T01:57:42+00:00",
+            "time": "2021-10-29T13:26:27+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.0.x-dev"
+                    "dev-master": "3.0.x-dev"
                 }
             },
             "installation-source": "dist",
@@ -320,7 +203,7 @@
             "authors": [
                 {
                     "name": "PHP-FIG",
-                    "homepage": "http://www.php-fig.org/"
+                    "homepage": "https://www.php-fig.org/"
                 }
             ],
             "description": "Common interfaces for simple caching",
@@ -332,29 +215,29 @@
                 "simple-cache"
             ],
             "support": {
-                "source": "https://github.com/php-fig/simple-cache/tree/master"
+                "source": "https://github.com/php-fig/simple-cache/tree/3.0.0"
             },
             "install-path": "../psr/simple-cache"
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v2.5.4",
-            "version_normalized": "2.5.4.0",
+            "version": "v3.7.1",
+            "version_normalized": "3.7.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "605389f2a7e5625f273b53960dc46aeaf9c62918"
+                "reference": "f3202fa1b5097b0af062dc978b32ecf63404e31d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/605389f2a7e5625f273b53960dc46aeaf9c62918",
-                "reference": "605389f2a7e5625f273b53960dc46aeaf9c62918",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/f3202fa1b5097b0af062dc978b32ecf63404e31d",
+                "reference": "f3202fa1b5097b0af062dc978b32ecf63404e31d",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1"
+                "php": ">=8.1"
             },
-            "time": "2024-09-25T14:11:13+00:00",
+            "time": "2026-06-05T06:23:12+00:00",
             "type": "library",
             "extra": {
                 "thanks": {
@@ -362,7 +245,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "2.5-dev"
+                    "dev-main": "3.7-dev"
                 }
             },
             "installation-source": "dist",
@@ -388,7 +271,7 @@
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/deprecation-contracts/tree/v2.5.4"
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.7.1"
             },
             "funding": [
                 {
@@ -397,6 +280,10 @@
                 },
                 {
                     "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
                     "type": "github"
                 },
                 {
@@ -494,34 +381,31 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v5.4.53",
-            "version_normalized": "5.4.53.0",
+            "version": "v7.4.20",
+            "version_normalized": "7.4.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "ae0bbb46f77ff56591d0a0259c7f458f4b3e1f77"
+                "reference": "0222bf4dfaa1e3ceb8fff579635d655f2950d5a7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/yaml/zipball/ae0bbb46f77ff56591d0a0259c7f458f4b3e1f77",
-                "reference": "ae0bbb46f77ff56591d0a0259c7f458f4b3e1f77",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/0222bf4dfaa1e3ceb8fff579635d655f2950d5a7",
+                "reference": "0222bf4dfaa1e3ceb8fff579635d655f2950d5a7",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.2.5",
-                "symfony/deprecation-contracts": "^2.1|^3",
+                "php": ">=8.2",
+                "symfony/deprecation-contracts": "^2.5|^3",
                 "symfony/polyfill-ctype": "^1.8"
             },
             "conflict": {
-                "symfony/console": "<5.3"
+                "symfony/console": "<6.4"
             },
             "require-dev": {
-                "symfony/console": "^5.3|^6.0"
+                "symfony/console": "^6.4|^7.0|^8.0"
             },
-            "suggest": {
-                "symfony/console": "For validating YAML files using the lint command"
-            },
-            "time": "2026-05-20T17:13:41+00:00",
+            "time": "2026-09-26T06:31:10+00:00",
             "bin": [
                 "Resources/bin/yaml-lint"
             ],
@@ -552,7 +436,7 @@
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/yaml/tree/v5.4.53"
+                "source": "https://github.com/symfony/yaml/tree/v7.4.20"
             },
             "funding": [
                 {
@@ -576,31 +460,31 @@
         },
         {
             "name": "topthink/think-cache",
-            "version": "v2.0.7",
-            "version_normalized": "2.0.7.0",
+            "version": "v3.0.1",
+            "version_normalized": "3.0.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/top-think/think-cache.git",
-                "reference": "7b6ace7eb9b569fe95000b254000bbafa3c7dfee"
+                "reference": "4f8becaf802e2ebcd0e37df46495fe3999e917ca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/top-think/think-cache/zipball/7b6ace7eb9b569fe95000b254000bbafa3c7dfee",
-                "reference": "7b6ace7eb9b569fe95000b254000bbafa3c7dfee",
+                "url": "https://api.github.com/repos/top-think/think-cache/zipball/4f8becaf802e2ebcd0e37df46495fe3999e917ca",
+                "reference": "4f8becaf802e2ebcd0e37df46495fe3999e917ca",
                 "shasum": ""
             },
             "require": {
-                "opis/closure": "^3.1",
-                "php": ">=7.1.0",
-                "psr/cache": "~1.0",
-                "psr/simple-cache": "^1.0",
-                "topthink/think-container": "~2.0"
+                "php": ">=8.0",
+                "psr/simple-cache": "^1.0|^2.0|^3.0",
+                "topthink/think-container": "^3.0"
             },
-            "time": "2023-01-16T08:09:09+00:00",
+            "time": "2025-01-15T05:30:04+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
-                "files": [],
+                "files": [
+                    "src/helper.php"
+                ],
                 "psr-4": {
                     "think\\": "src"
                 }
@@ -618,34 +502,34 @@
             "description": "Cache Manager",
             "support": {
                 "issues": "https://github.com/top-think/think-cache/issues",
-                "source": "https://github.com/top-think/think-cache/tree/v2.0.7"
+                "source": "https://github.com/top-think/think-cache/tree/v3.0.1"
             },
             "install-path": "../topthink/think-cache"
         },
         {
             "name": "topthink/think-container",
-            "version": "v2.0.5",
-            "version_normalized": "2.0.5.0",
+            "version": "v3.0.2",
+            "version_normalized": "3.0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/top-think/think-container.git",
-                "reference": "2189b39e42af2c14203ed4372b92e38989e9dabb"
+                "reference": "b2df244be1e7399ad4c8be1ccc40ed57868f730a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/top-think/think-container/zipball/2189b39e42af2c14203ed4372b92e38989e9dabb",
-                "reference": "2189b39e42af2c14203ed4372b92e38989e9dabb",
+                "url": "https://api.github.com/repos/top-think/think-container/zipball/b2df244be1e7399ad4c8be1ccc40ed57868f730a",
+                "reference": "b2df244be1e7399ad4c8be1ccc40ed57868f730a",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.2.0",
-                "psr/container": "^1.0|^2.0",
+                "php": ">=8.0",
+                "psr/container": "^2.0",
                 "topthink/think-helper": "^3.1"
             },
             "require-dev": {
-                "phpunit/phpunit": "^7.0|^8.0"
+                "phpunit/phpunit": "^9.5"
             },
-            "time": "2022-05-23T06:24:54+00:00",
+            "time": "2025-04-07T03:21:51+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -667,7 +551,7 @@
             "description": "PHP Container & Facade Manager",
             "support": {
                 "issues": "https://github.com/top-think/think-container/issues",
-                "source": "https://github.com/top-think/think-container/tree/v2.0.5"
+                "source": "https://github.com/top-think/think-container/tree/v3.0.2"
             },
             "install-path": "../topthink/think-container"
         },
@@ -722,35 +606,40 @@
         },
         {
             "name": "topthink/think-orm",
-            "version": "v2.0.62",
-            "version_normalized": "2.0.62.0",
+            "version": "v4.0.51",
+            "version_normalized": "4.0.51.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/top-think/think-orm.git",
-                "reference": "e53bfea572a133039ad687077120de5521af617f"
+                "reference": "46abe2f824eb3bcb117d4c0ce93b203b592b79f7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/top-think/think-orm/zipball/e53bfea572a133039ad687077120de5521af617f",
-                "reference": "e53bfea572a133039ad687077120de5521af617f",
+                "url": "https://api.github.com/repos/top-think/think-orm/zipball/46abe2f824eb3bcb117d4c0ce93b203b592b79f7",
+                "reference": "46abe2f824eb3bcb117d4c0ce93b203b592b79f7",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-pdo": "*",
-                "php": ">=7.1.0",
-                "psr/log": "^1.0|^2.0",
-                "psr/simple-cache": "^1.0|^2.0",
-                "topthink/think-helper": "^3.1"
+                "php": ">=8.0.0",
+                "psr/log": ">=1.0",
+                "psr/simple-cache": "^3.0",
+                "topthink/think-helper": "^3.1",
+                "topthink/think-validate": "^3.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^7|^8|^9.5"
+                "phpunit/phpunit": "^9.6|^10"
             },
-            "time": "2024-09-22T06:17:47+00:00",
+            "suggest": {
+                "ext-mongodb": "provide mongodb support"
+            },
+            "time": "2025-12-18T13:11:52+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
                 "files": [
+                    "src/helper.php",
                     "stubs/load_stubs.php"
                 ],
                 "psr-4": {
@@ -767,16 +656,63 @@
                     "email": "liu21st@gmail.com"
                 }
             ],
-            "description": "think orm",
+            "description": "the PHP Database&ORM Framework",
             "keywords": [
                 "database",
                 "orm"
             ],
             "support": {
                 "issues": "https://github.com/top-think/think-orm/issues",
-                "source": "https://github.com/top-think/think-orm/tree/v2.0.62"
+                "source": "https://github.com/top-think/think-orm/tree/v4.0.51"
             },
             "install-path": "../topthink/think-orm"
+        },
+        {
+            "name": "topthink/think-validate",
+            "version": "v3.0.7",
+            "version_normalized": "3.0.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/top-think/think-validate.git",
+                "reference": "85063f6d4ef8ed122f17a36179dc3e0949b30988"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/top-think/think-validate/zipball/85063f6d4ef8ed122f17a36179dc3e0949b30988",
+                "reference": "85063f6d4ef8ed122f17a36179dc3e0949b30988",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0",
+                "topthink/think-container": ">=3.0"
+            },
+            "time": "2025-06-11T05:51:40+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "files": [
+                    "src/helper.php"
+                ],
+                "psr-4": {
+                    "think\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "liu21st",
+                    "email": "liu21st@gmail.com"
+                }
+            ],
+            "description": "think validate",
+            "support": {
+                "issues": "https://github.com/top-think/think-validate/issues",
+                "source": "https://github.com/top-think/think-validate/tree/v3.0.7"
+            },
+            "install-path": "../topthink/think-validate"
         }
     ],
     "dev": false,
