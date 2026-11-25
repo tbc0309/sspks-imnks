@@ -26,14 +26,14 @@ Simplified Chinese and English are maintained directly. Other languages are AI-t
 - Extensions: json, pdo, pdo_sqlite, pdo_mysql, phar, sodium and mbstring. Use GD with WebP support or Imagick for images.
 - PHP must be able to write to cache/ and runtime/. Resumable tasks require pdo_sqlite even when the main index uses MySQL.
 
-For index updates, recommended website PHP settings are **1024M** for memory and **600 seconds** for execution time. Insufficient memory or an overly short execution limit may cause indexing to fail with many SPKs or large metadata and images.
+**Recommended PHP settings for indexing: `memory_limit = 1024M` and `max_execution_time = 600`. Insufficient memory or an overly short execution limit may cause indexing to fail with many SPKs.**
 
 ```ini
 memory_limit = 1024M
 max_execution_time = 600
 ```
 
-Change the `php.ini` used by the website's PHP-FPM service, or the site's PHP settings, then reload PHP-FPM. CLI and PHP-FPM may use different configurations; changing CLI PHP alone does not affect web-based indexing. This is a per-request limit, so account for available server memory and concurrency.
+**Change the `php.ini` used by the website's PHP-FPM service, or the site's PHP settings, then reload PHP-FPM.** CLI and PHP-FPM may use different configurations; changing CLI PHP alone does not affect web-based indexing. This is a per-request limit, so account for available server memory and concurrency.
 
 Indexing still runs in consecutive short batches, and the application further caps each request. The 600-second setting does not make a request run for 600 seconds or override CDN timeouts.
 
