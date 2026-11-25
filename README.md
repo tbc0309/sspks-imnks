@@ -26,6 +26,14 @@
 - 扩展：json、pdo、pdo_sqlite、pdo_mysql、phar、sodium、mbstring；图片转换使用支持 WebP 的 GD 或 Imagick。
 - PHP 对 cache/、runtime/ 有写权限。即使主索引使用 MySQL，任务恢复仍需要 pdo_sqlite。
 
+索引更新建议将网站使用的 PHP 内存上限设为 **1024M**。套件较多或元数据、图片较大时，内存上限过低可能导致索引失败。
+
+```ini
+memory_limit = 1024M
+```
+
+请修改网站实际使用的 PHP-FPM `php.ini` 或对应站点的 PHP 设置，保存后重载 PHP-FPM。CLI 与 PHP-FPM 可能使用不同配置，仅修改命令行 PHP 的设置不会影响网页索引更新。该值是单个 PHP 请求的内存上限，应结合服务器可用内存和并发数设置。
+
 发布包包含 vendor/，无需重新安装依赖。
 
 ## 2. 部署并配置

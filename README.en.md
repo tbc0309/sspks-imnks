@@ -26,6 +26,14 @@ Simplified Chinese and English are maintained directly. Other languages are AI-t
 - Extensions: json, pdo, pdo_sqlite, pdo_mysql, phar, sodium and mbstring. Use GD with WebP support or Imagick for images.
 - PHP must be able to write to cache/ and runtime/. Resumable tasks require pdo_sqlite even when the main index uses MySQL.
 
+For index updates, set the website's PHP memory limit to **1024M** as a recommended starting point. A lower limit may cause indexing to fail when there are many SPKs or large metadata and images.
+
+```ini
+memory_limit = 1024M
+```
+
+Change the `php.ini` used by the website's PHP-FPM service, or the site's PHP settings, then reload PHP-FPM. CLI and PHP-FPM may use different configurations; changing CLI PHP alone does not affect web-based indexing. This is a per-request limit, so account for available server memory and concurrency.
+
 Release packages include vendor/; no dependency installation is required.
 
 ## 2. Deploy and configure
